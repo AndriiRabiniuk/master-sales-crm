@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-toastify';
@@ -27,9 +27,17 @@ const Dashboard = () => {
     won: 0,
     lost: 0,
   });
-  const [recentTasks, setRecentTasks] = useState([]);
+  const [recentTasks, setRecentTasks] = useState<any[]>([]);
+  const effectRan = useRef(false);
 
   useEffect(() => {
+    // Skip effect on first render in strict mode's second development render
+    if (effectRan.current === true && process.env.NODE_ENV === 'development') {
+      return;
+    }
+    
+    effectRan.current = true;
+    
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
