@@ -269,9 +269,6 @@ const TasksPage = () => {
                         Title
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Priority
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Due Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -314,22 +311,15 @@ const TasksPage = () => {
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {task.priorite && (
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityBadgeColor(task.priorite)}`}>
-                                {task.priorite}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-500">
-                              {formatDate(task.dateEcheance)}
+                              {formatDate(task.due_date)}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-500">
-                              {task.client_id ? (
-                                <Link href={`/clients/${task.client_id}`} className="text-indigo-600 hover:text-indigo-900">
-                                  {task.client?.nom || 'Client'}
+                              {task.assigned_to ? (
+                                <Link href={`/clients/${task.assigned_to._id}`} className="text-indigo-600 hover:text-indigo-900">
+                                  {task.assigned_to?.email || 'Client'}
                                 </Link>
                               ) : task.lead_id ? (
                                 <Link href={`/leads/${task.lead_id}`} className="text-indigo-600 hover:text-indigo-900">

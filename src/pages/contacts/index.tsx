@@ -106,7 +106,7 @@ const ContactsPage = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2"
                 placeholder="Search contacts..."
               />
               {isSearching && (
@@ -181,7 +181,7 @@ const ContactsPage = () => {
                         </th>
                         <th
                           scope="col"
-                          className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                           Actions
                         </th>
@@ -212,31 +212,31 @@ const ContactsPage = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{contact.poste || '-'}</div>
+                            <div className="text-sm text-gray-900">{contact.fonction || '-'}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {contact.client ? (
+                            {contact.client_id ? (
                               <Link
-                                href={`/clients/${contact.client.id}`}
+                                href={`/clients/${contact.client_id._id}`}
                                 className="text-sm text-indigo-600 hover:text-indigo-900"
                               >
-                                {contact.client.nom}
+                                {contact.client_id.name}
                               </Link>
                             ) : (
                               <span className="text-sm text-gray-500">-</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 flex">
                             <Link
                               href={`/contacts/${contact._id}`}
-                              className="text-indigo-600 hover:text-indigo-900 mr-3"
+                              className="text-indigo-600 hover:text-indigo-900"
                               title="View"
                             >
                               <FiEye />
                             </Link>
                             <Link
                               href={`/contacts/edit/${contact._id}`}
-                              className="text-indigo-600 hover:text-indigo-900 mr-3"
+                              className="text-indigo-600 hover:text-indigo-900"
                               title="Edit"
                             >
                               <FiEdit />
