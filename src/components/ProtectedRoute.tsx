@@ -8,16 +8,30 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user, token } = useAuth();
   const router = useRouter();
 
+  console.log('ProtectedRoute - Auth State:', { 
+    isAuthenticated, 
+    loading, 
+    hasUser: !!user, 
+    hasToken: !!token 
+  });
+
   useEffect(() => {
+    console.log('ProtectedRoute - useEffect triggered', { 
+      isAuthenticated, 
+      loading 
+    });
+    
     if (!loading && !isAuthenticated) {
+      console.log('ProtectedRoute - Redirecting to login page');
       router.push('/login');
     }
   }, [isAuthenticated, loading, router]);
 
   if (loading) {
+    console.log('ProtectedRoute - Still loading, showing spinner');
     return (
       <div className="flex justify-center items-center h-screen">
         <LoadingSpinner />
@@ -25,6 +39,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  console.log('ProtectedRoute - Rendering children:', { isAuthenticated });
   return isAuthenticated ? <>{children}</> : null;
 };
 

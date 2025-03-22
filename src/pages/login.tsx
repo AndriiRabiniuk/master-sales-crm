@@ -22,16 +22,21 @@ const Login = () => {
   useEffect(() => {
     // If user is already logged in, redirect to dashboard
     if (user) {
+      console.log('User already logged in, redirecting to dashboard');
       router.push('/dashboard');
     }
   }, [user, router]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      console.log('Login form submitted with email:', data.email);
       setError(null);
       await login(data.email, data.password);
+      // If login is successful, this will automatically redirect to dashboard
+      // because of the useEffect hook above
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      console.error('Login error caught:', err);
+      setError(err.message || 'Login failed. Please check your credentials.');
     }
   };
 
@@ -83,7 +88,7 @@ const Login = () => {
                   className={`block w-full pl-10 pr-3 py-2 border ${
                     errors.email ? 'border-red-300' : 'border-gray-300'
                   } rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                  placeholder="you@example.com"
+                  placeholder="admin@example.com"
                   aria-invalid={errors.email ? 'true' : 'false'}
                 />
               </div>
@@ -109,7 +114,7 @@ const Login = () => {
                   className={`block w-full pl-10 pr-10 py-2 border ${
                     errors.password ? 'border-red-300' : 'border-gray-300'
                   } rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                  placeholder="••••••••"
+                  placeholder="password"
                   aria-invalid={errors.password ? 'true' : 'false'}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -169,6 +174,23 @@ const Login = () => {
               </button>
             </div>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  Demo credentials
+                </span>
+              </div>
+            </div>
+            <div className="mt-4 text-center text-sm text-gray-600">
+              <p>Email: <code className="font-mono bg-gray-100 p-1 rounded">admin@example.com</code></p>
+              <p>Password: <code className="font-mono bg-gray-100 p-1 rounded">password</code></p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
