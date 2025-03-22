@@ -1,40 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Master Sales CRM
+
+A comprehensive Customer Relationship Management system for sales teams, built with Next.js, TypeScript, and Tailwind CSS.
+
+## Features
+
+- User authentication and role-based access control
+- Client management with detailed information
+- Contact management with client associations
+- Dashboard with key metrics and charts
+- Responsive design for desktop and mobile devices
+- Modern UI with Tailwind CSS styling
+
+## Tech Stack
+
+- **Frontend**: Next.js, TypeScript, React, Tailwind CSS
+- **State Management**: React Context API
+- **Form Handling**: react-hook-form
+- **UI Components**: Custom components with Tailwind CSS
+- **Icons**: react-icons
+- **Charts**: Chart.js with react-chartjs-2
+- **HTTP Client**: Axios
+- **Notifications**: react-toastify
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js (>=14.x)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/master-sales-crm.git
+   cd master-sales-crm
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Configure environment variables:
+   Create a `.env.local` file in the root directory with the following content:
+   ```
+   NEXT_PUBLIC_API_URL=http://localhost:3001/api
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Project Structure
+
+```
+src/
+├── components/       # Reusable UI components
+│   ├── clients/      # Client-related components
+│   ├── common/       # Common UI components
+│   ├── contacts/     # Contact-related components
+│   └── layout/       # Layout components
+├── contexts/         # React context providers
+├── pages/            # Next.js pages
+│   ├── clients/      # Client pages
+│   ├── contacts/     # Contact pages
+│   └── api/          # API routes
+├── services/         # API services
+│   └── api/          # API client services
+└── styles/           # Global styles
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## API Integration
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+The frontend connects to a backend API at the URL specified in the `NEXT_PUBLIC_API_URL` environment variable. The API should provide endpoints for:
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+- Authentication (login, register, token validation)
+- Client management (CRUD operations)
+- Contact management (CRUD operations)
+- Dashboard metrics
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The application can be deployed to various platforms like Vercel, Netlify, or any hosting service that supports Next.js applications.
 
-## Learn More
+```bash
+# Build for production
+npm run build
+# or
+yarn build
 
-To learn more about Next.js, take a look at the following resources:
+# Start production server
+npm start
+# or
+yarn start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Deploy on Vercel
+## Acknowledgements
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+- Next.js team for the amazing framework
+- Tailwind CSS for the utility-first CSS framework
+- React community for the awesome ecosystem
