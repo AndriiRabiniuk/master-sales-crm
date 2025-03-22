@@ -1,17 +1,9 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
 import { useRouter } from 'next/router';
-import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
-import { authService } from '../services/api';
-
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-}
+import { authService } from '@/services/api';
+import type { User } from '@/services/api/mockAuthService';
+import { getToken, removeToken } from '@/services/api/index';
 
 interface AuthContextType {
   user: User | null;
@@ -20,7 +12,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<void>;
 }
 
@@ -34,47 +26,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check if user is logged in on initial load
   useEffect(() => {
-    const storedToken = Cookies.get('token');
+    const storedToken = getToken();
     console.log('Initial load - stored token:', storedToken ? 'Token exists' : 'No token');
+    
     if (storedToken) {
       setToken(storedToken);
-      fetchUserProfile(storedToken);
+      fetchUserProfile();
     } else {
       setLoading(false);
     }
   }, []);
 
-  // Set up axios interceptor for authentication
-  useEffect(() => {
-    const interceptor = axios.interceptors.request.use(
-      (config) => {
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    return () => {
-      axios.interceptors.request.eject(interceptor);
-    };
-  }, [token]);
-
-  const fetchUserProfile = async (currentToken: string) => {
+  const fetchUserProfile = async () => {
     try {
-      console.log('Fetching user profile with token:', currentToken);
-      
-      // Use auth service instead of direct API call
-      const userData = await authService.getUserProfile(currentToken);
+      console.log('Fetching user profile');
+      const userData = await authService.getProfile();
       console.log('User profile fetched successfully:', userData);
       
       setUser(userData);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      Cookies.remove('token');
-      setToken(null);
+      removeToken();
+      localStorage.removeItem('refreshToken');
+    } finally {
       setLoading(false);
     }
   };
@@ -84,21 +58,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       console.log('Attempting login with:', email);
       
-      // Use auth service instead of direct API call
       const response = await authService.login(email, password);
       const { token: newToken, user: userData } = response;
       
-      console.log('Login successful, received token and user data:', userData);
+      console.log('Login successful, received token and user data');
       
       setToken(newToken);
       setUser(userData);
-      Cookies.set('token', newToken, { expires: 7 });
       
       toast.success('Login successful!');
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || 'Login failed');
+      toast.error(error.response?.data?.message || 'Login failed. Please check your credentials.');
       throw error;
     } finally {
       setLoading(false);
@@ -109,7 +81,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // Use auth service instead of direct API call
       await authService.register({
         firstName,
         lastName,
@@ -120,19 +91,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success('Registration successful! Please login.');
       router.push('/login');
     } catch (error: any) {
-      toast.error(error.message || 'Registration failed');
+      toast.error(error.response?.data?.message || 'Registration failed.');
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    Cookies.remove('token');
-    setUser(null);
-    setToken(null);
-    router.push('/login');
-    toast.info('You have been logged out');
+  const logout = async () => {
+    try {
+      setLoading(true);
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setToken(null);
+      setLoading(false);
+      router.push('/login');
+      toast.info('You have been logged out');
+    }
   };
 
   const updateProfile = async (userData: Partial<User>) => {
@@ -141,16 +119,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setLoading(true);
       
-      // Use auth service instead of direct API call
-      const updatedUser = await authService.updateProfile(
-        user.id,
-        userData
-      );
+      const updatedUser = await authService.updateProfile(userData);
       
       setUser(updatedUser);
       toast.success('Profile updated successfully');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update profile');
+      toast.error(error.response?.data?.message || 'Failed to update profile');
       throw error;
     } finally {
       setLoading(false);

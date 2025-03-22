@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/context/AuthContext';
-import { clientService, leadService, taskService } from '@/services/api';
 import { toast } from 'react-toastify';
 import { FiUsers, FiFileText, FiCalendar, FiCheckCircle } from 'react-icons/fi';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { clientService, leadService, taskService } from '../services/api';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -49,7 +49,7 @@ const Dashboard = () => {
           lost: 0,
         };
         
-        leads.forEach((lead: any) => {
+        leads.leads.forEach((lead: any) => {
           if (leadStatusCounts[lead.statut as keyof typeof leadStatusCounts] !== undefined) {
             leadStatusCounts[lead.statut as keyof typeof leadStatusCounts]++;
           }
@@ -57,17 +57,17 @@ const Dashboard = () => {
         
         // Fetch tasks
         const tasks = await taskService.getAll();
-        const completedTasksCount = tasks.filter((task: any) => task.status === 'completed').length;
+        const completedTasksCount = tasks.tasks.filter((task: any) => task.status === 'completed').length;
         
         setStats({
-          clientCount: clients.clients?.length || 0,
-          leadCount: leads.length || 0,
-          taskCount: tasks.length || 0,
+          clientCount: clients.total|| 0,
+          leadCount: leads.total || 0,
+          taskCount: tasks.total || 0,
           completedTasks: completedTasksCount || 0,
         });
         
         setLeadsByStatus(leadStatusCounts);
-        setRecentTasks(tasks.slice(0, 5));
+        setRecentTasks(tasks?.tasks?.slice(0, 5));
         
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -148,7 +148,7 @@ const Dashboard = () => {
     <MainLayout>
       <div className="pb-5 border-b border-gray-200">
         <h3 className="text-lg leading-6 font-medium text-gray-900">
-          Welcome back, {user?.username || 'User'}
+          Welcome back, {user?.firstName || 'User'}
         </h3>
         <p className="mt-2 max-w-4xl text-sm text-gray-500">
           Here's what's happening with your sales activity today.

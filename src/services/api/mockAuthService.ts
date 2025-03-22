@@ -1,8 +1,11 @@
 // This file provides mock authentication services for development
 // Will be replaced with actual API calls in production
 
+import { api, API_URL, setToken, removeToken, LoginRequest, RegisterRequest, AuthResponse } from './index';
+import axios from 'axios';
+
 export interface User {
-  id: string;
+  _id: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -18,7 +21,7 @@ interface LoginResponse {
 
 // A fixed mock user to facilitate development
 const MOCK_USER: User = {
-  id: '1',
+  _id: '1',
   email: 'admin@example.com',
   firstName: 'Admin',
   lastName: 'User',
@@ -29,7 +32,7 @@ const MOCK_USER: User = {
 
 // Mock user for testing regular user permissions
 const MOCK_REGULAR_USER: User = {
-  id: '2',
+  _id: '2',
   email: 'user@example.com',
   firstName: 'Regular',
   lastName: 'User',
@@ -38,121 +41,102 @@ const MOCK_REGULAR_USER: User = {
   updatedAt: new Date().toISOString()
 };
 
-const mockAuthService = {
-  login: async (email: string, password: string): Promise<LoginResponse> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    console.log(`Mock login attempt for email: ${email}`);
-
-    // Check credentials (in a real app this would verify against a database)
-    if (email === 'admin@example.com' && password === 'password') {
-      console.log('Mock login successful: admin user');
-      return {
-        token: 'mock-jwt-token-for-admin-very-secure',
-        user: MOCK_USER
-      };
-    } else if (email === 'user@example.com' && password === 'password') {
-      console.log('Mock login successful: regular user');
-      return {
-        token: 'mock-jwt-token-for-regular-user-very-secure',
-        user: MOCK_REGULAR_USER
-      };
-    } else {
-      console.log('Mock login failed: invalid credentials');
-      throw new Error('Invalid email or password');
+// Auth service for handling authentication
+const authService = {
+  login: async (email: string, password: string): Promise<AuthResponse> => {
+    try {
+      const response = await axios.post<AuthResponse>(`${API_URL}/auth/login`, { email, password });
+      const { token, refreshToken, user } = response.data;
+      
+      // Save tokens to localStorage
+      setToken(token);
+      localStorage.setItem('refreshToken', refreshToken);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
   },
 
-  register: async (userData: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  }): Promise<User> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    console.log('Mock register attempt', userData);
-    
-    // In a real app, this would create a new user in the database
-    // For now, just return a mock success
-    return {
-      id: '3',
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      role: 'user',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-  },
-
-  getUserProfile: async (token: string): Promise<User> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    console.log(`Mock getUserProfile with token: ${token}`);
-    
-    // Validate the token
-    if (token === 'mock-jwt-token-for-admin-very-secure') {
-      console.log('Mock token validation successful: admin user');
-      return MOCK_USER;
-    } else if (token === 'mock-jwt-token-for-regular-user-very-secure') {
-      console.log('Mock token validation successful: regular user');
-      return MOCK_REGULAR_USER;
-    } else {
-      console.log('Mock token validation failed');
-      throw new Error('Invalid token');
+  register: async (userData: RegisterRequest): Promise<User> => {
+    try {
+      const response = await axios.post<User>(`${API_URL}/auth/register`, userData);
+      return response.data;
+    } catch (error) {
+      console.error('Register error:', error);
+      throw error;
     }
   },
 
-  updateProfile: async (userId: string, profileData: Partial<Omit<User, 'id' | 'role' | 'createdAt' | 'updatedAt'>>): Promise<User> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    console.log(`Mock updateProfile for user: ${userId}`, profileData);
-    
-    // In a real app, this would update the user in the database
-    // For now, just return a mock success with updated fields
-    if (userId === '1') {
-      const updatedUser = {
-        ...MOCK_USER,
-        ...profileData,
-        updatedAt: new Date().toISOString()
-      };
-      console.log('Mock profile update successful for admin user');
-      return updatedUser;
-    } else if (userId === '2') {
-      const updatedUser = {
-        ...MOCK_REGULAR_USER,
-        ...profileData,
-        updatedAt: new Date().toISOString()
-      };
-      console.log('Mock profile update successful for regular user');
-      return updatedUser;
-    } else {
-      console.log('Mock profile update failed: user not found');
-      throw new Error('User not found');
+  getUserProfile: async (): Promise<User> => {
+    try {
+      const response = await api.get<User>(`${API_URL}/auth/profile`);
+      return response.data;
+    } catch (error) {
+      console.error('Get user profile error:', error);
+      throw error;
+    }
+  },
+  
+  // Alias for getUserProfile for backward compatibility
+  getProfile: async (): Promise<User> => {
+    try {
+      const response = await api.get<User>(`${API_URL}/auth/profile`);
+      return response.data;
+    } catch (error) {
+      console.error('Get profile error:', error);
+      throw error;
     }
   },
 
-  changePassword: async (userId: string, oldPassword: string, newPassword: string): Promise<boolean> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    console.log(`Mock changePassword for user: ${userId}`);
-    
-    // Validate old password (in a real app this would check against stored password)
-    if (oldPassword !== 'password') {
-      console.log('Mock password change failed: incorrect old password');
-      throw new Error('Incorrect old password');
+  updateProfile: async (userData: Partial<User>): Promise<User> => {
+    try {
+      const response = await api.put<User>(`${API_URL}/auth/profile`, userData);
+      return response.data;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
     }
-    
-    // In a real app, this would update the password in the database
-    console.log('Mock password change successful');
-    return true;
+  },
+
+  changePassword: async (oldPassword: string, newPassword: string): Promise<boolean> => {
+    try {
+      await api.put(`${API_URL}/auth/change-password`, { oldPassword, newPassword });
+      return true;
+    } catch (error) {
+      console.error('Change password error:', error);
+      throw error;
+    }
+  },
+
+  refreshToken: async (refreshToken: string): Promise<AuthResponse> => {
+    try {
+      const response = await axios.post<AuthResponse>(`${API_URL}/auth/refresh`, { refreshToken });
+      const { token, refreshToken: newRefreshToken } = response.data;
+      
+      // Update tokens
+      setToken(token);
+      localStorage.setItem('refreshToken', newRefreshToken);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Refresh token error:', error);
+      throw error;
+    }
+  },
+
+  logout: async (): Promise<void> => {
+    try {
+      await api.post(`${API_URL}/auth/logout`);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Always remove tokens on logout
+      removeToken();
+      localStorage.removeItem('refreshToken');
+    }
   }
 };
 
-export default mockAuthService; 
+export default authService; 

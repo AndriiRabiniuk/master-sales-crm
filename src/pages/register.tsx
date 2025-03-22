@@ -7,11 +7,11 @@ import { useAuth } from '@/context/AuthContext';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface RegisterFormData {
-  username: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   confirmPassword: string;
-  role: string;
 }
 
 const Register = () => {
@@ -32,7 +32,12 @@ const Register = () => {
         return;
       }
       
-      await registerUser(data.username, data.email, data.password, data.role);
+      await registerUser(
+        data.firstName,
+        data.lastName,
+        data.email,
+        data.password
+      );
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     }
@@ -70,33 +75,65 @@ const Register = () => {
           
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                First Name
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FiUser className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="username"
+                  id="firstName"
                   type="text"
-                  {...register('username', { 
-                    required: 'Username is required',
+                  {...register('firstName', { 
+                    required: 'First name is required',
                     minLength: {
-                      value: 3,
-                      message: 'Username must be at least 3 characters',
+                      value: 2,
+                      message: 'First name must be at least 2 characters',
                     },
                   })}
                   className={`block w-full pl-10 pr-3 py-2 border ${
-                    errors.username ? 'border-red-300' : 'border-gray-300'
+                    errors.firstName ? 'border-red-300' : 'border-gray-300'
                   } rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                  placeholder="johnsmith"
-                  aria-invalid={errors.username ? 'true' : 'false'}
+                  placeholder="John"
+                  aria-invalid={errors.firstName ? 'true' : 'false'}
                 />
               </div>
-              {errors.username && (
-                <p className="mt-2 text-sm text-red-600" id="username-error">
-                  {errors.username.message}
+              {errors.firstName && (
+                <p className="mt-2 text-sm text-red-600" id="firstName-error">
+                  {errors.firstName.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                Last Name
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiUser className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="lastName"
+                  type="text"
+                  {...register('lastName', { 
+                    required: 'Last name is required',
+                    minLength: {
+                      value: 2,
+                      message: 'Last name must be at least 2 characters',
+                    },
+                  })}
+                  className={`block w-full pl-10 pr-3 py-2 border ${
+                    errors.lastName ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                  placeholder="Smith"
+                  aria-invalid={errors.lastName ? 'true' : 'false'}
+                />
+              </div>
+              {errors.lastName && (
+                <p className="mt-2 text-sm text-red-600" id="lastName-error">
+                  {errors.lastName.message}
                 </p>
               )}
             </div>
@@ -221,29 +258,6 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Role
-              </label>
-              <select
-                id="role"
-                {...register('role', { required: 'Role is required' })}
-                className={`block w-full py-2 px-3 border ${
-                  errors.role ? 'border-red-300' : 'border-gray-300'
-                } bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-              >
-                <option value="">Select Role</option>
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="sales">Sales</option>
-              </select>
-              {errors.role && (
-                <p className="mt-2 text-sm text-red-600" id="role-error">
-                  {errors.role.message}
-                </p>
-              )}
-            </div>
-
-            <div>
               <button
                 type="submit"
                 disabled={loading}
@@ -253,7 +267,7 @@ const Register = () => {
                   <LoadingSpinner size="small" color="white" />
                 ) : (
                   <>
-                    <FiUserPlus className="mr-2 h-5 w-5" /> Create Account
+                    <FiUserPlus className="mr-2 h-5 w-5" /> Register
                   </>
                 )}
               </button>

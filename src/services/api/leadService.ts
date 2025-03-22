@@ -1,9 +1,7 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { api, API_URL } from './index';
 
 export interface Lead {
-  id: string;
+  _id: string;
   nom: string;
   email: string;
   telephone?: string;
@@ -31,65 +29,55 @@ export interface LeadsResponse {
 }
 
 const leadService = {
-  getAll: async (page = 1, limit = 10, search = ''): Promise<Lead[]> => {
-    // In a production environment, this would fetch from the API
-    // For now, return dummy data
-    return [
-      {
-        id: '1',
-        nom: 'Lead 1',
-        email: 'lead1@example.com',
-        statut: 'new',
-        valeur_estimee: 10000,
-      },
-      {
-        id: '2',
-        nom: 'Lead 2',
-        email: 'lead2@example.com',
-        statut: 'contacted',
-        valeur_estimee: 15000,
-      },
-      {
-        id: '3',
-        nom: 'Lead 3',
-        email: 'lead3@example.com',
-        statut: 'negotiation',
-        valeur_estimee: 20000,
-      },
-      {
-        id: '4',
-        nom: 'Lead 4',
-        email: 'lead4@example.com',
-        statut: 'won',
-        valeur_estimee: 25000,
-      },
-      {
-        id: '5',
-        nom: 'Lead 5',
-        email: 'lead5@example.com',
-        statut: 'lost',
-        valeur_estimee: 30000,
-      }
-    ];
+  getAll: async (page = 1, limit = 10, search = ''): Promise<LeadsResponse> => {
+    try {
+      const response = await api.get<LeadsResponse>(`${API_URL}/leads`, {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+      throw error;
+    }
   },
 
   getById: async (id: string): Promise<Lead> => {
-    const response = await axios.get(`${API_URL}/leads/${id}`);
-    return response.data;
+    try {
+      const response = await api.get<Lead>(`${API_URL}/leads/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching lead with id ${id}:`, error);
+      throw error;
+    }
   },
 
   create: async (leadData: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>): Promise<Lead> => {
-    const response = await axios.post(`${API_URL}/leads`, leadData);
-    return response.data;
+    try {
+      const response = await api.post<Lead>(`${API_URL}/leads`, leadData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating lead:', error);
+      throw error;
+    }
   },
 
   update: async (id: string, leadData: Partial<Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Lead> => {
-    const response = await axios.put(`${API_URL}/leads/${id}`, leadData);
-    return response.data;
+    try {
+      const response = await api.put<Lead>(`${API_URL}/leads/${id}`, leadData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating lead with id ${id}:`, error);
+      throw error;
+    }
   },
 
   delete: async (id: string): Promise<void> => {
-    await axios.delete(`${API_URL}/leads/${id}`);
+    try {
+      await api.delete(`${API_URL}/leads/${id}`);
+    } catch (error) {
+      console.error(`Error deleting lead with id ${id}:`, error);
+      throw error;
+    }
   }
 };
 

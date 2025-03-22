@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { api, API_URL } from './index';
 
 export interface Task {
   id: string;
@@ -30,7 +28,7 @@ export interface Task {
 }
 
 export interface TasksResponse {
-  tasks: Task[];
+  tasks: [];
   total: number;
   page: number;
   limit: number;
@@ -38,70 +36,65 @@ export interface TasksResponse {
 }
 
 const taskService = {
-  getAll: async (page = 1, limit = 10, search = ''): Promise<Task[]> => {
-    // In a production environment, this would fetch from the API
-    // For now, return dummy data
-    return [
-      {
-        id: '1',
-        titre: 'Appeler le client',
-        statut: 'not_started',
-        priorite: 'high',
-        dateEcheance: new Date(Date.now() + 86400000).toISOString(),
-      },
-      {
-        id: '2',
-        titre: 'Envoyer un devis',
-        statut: 'completed',
-        priorite: 'medium',
-        dateEcheance: new Date().toISOString(),
-      },
-      {
-        id: '3',
-        titre: 'Suivre la relance',
-        statut: 'in_progress',
-        priorite: 'medium',
-        dateEcheance: new Date(Date.now() + 172800000).toISOString(),
-      },
-      {
-        id: '4',
-        titre: 'Rendez-vous client',
-        statut: 'not_started',
-        priorite: 'high',
-        dateEcheance: new Date(Date.now() + 259200000).toISOString(),
-      },
-      {
-        id: '5',
-        titre: 'Mise à jour du contrat',
-        statut: 'delayed',
-        priorite: 'low',
-        dateEcheance: new Date(Date.now() - 86400000).toISOString(),
-      }
-    ];
+  getAll: async (page = 1, limit = 10, search = ''): Promise<TasksResponse> => {
+    try {
+      const response = await api.get<TasksResponse>(`${API_URL}/tasks`, {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      throw error;
+    }
   },
 
   getById: async (id: string): Promise<Task> => {
-    const response = await axios.get(`${API_URL}/tasks/${id}`);
-    return response.data;
+    try {
+      const response = await api.get<Task>(`${API_URL}/tasks/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching task with id ${id}:`, error);
+      throw error;
+    }
   },
 
   create: async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<Task> => {
-    const response = await axios.post(`${API_URL}/tasks`, taskData);
-    return response.data;
+    try {
+      const response = await api.post<Task>(`${API_URL}/tasks`, taskData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating task:', error);
+      throw error;
+    }
   },
 
   update: async (id: string, taskData: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Task> => {
-    const response = await axios.put(`${API_URL}/tasks/${id}`, taskData);
-    return response.data;
+    try {
+      const response = await api.put<Task>(`${API_URL}/tasks/${id}`, taskData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating task with id ${id}:`, error);
+      throw error;
+    }
   },
 
   delete: async (id: string): Promise<void> => {
-    await axios.delete(`${API_URL}/tasks/${id}`);
+    try {
+      await api.delete(`${API_URL}/tasks/${id}`);
+    } catch (error) {
+      console.error(`Error deleting task with id ${id}:`, error);
+      throw error;
+    }
   },
   
   completeTask: async (id: string): Promise<Task> => {
-    const response = await axios.put(`${API_URL}/tasks/${id}/complete`, {});
-    return response.data;
+    try {
+      const response = await api.put<Task>(`${API_URL}/tasks/${id}/complete`, {});
+      return response.data;
+    } catch (error) {
+      console.error(`Error completing task with id ${id}:`, error);
+      throw error;
+    }
   }
 };
 
