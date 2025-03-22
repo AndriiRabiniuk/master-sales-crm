@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FiArrowLeft, FiSave } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
-import userService from '@/services/api/userService';
+import userService, { UserRole } from '@/services/api/userService';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const AddUserPage = () => {
@@ -16,7 +16,8 @@ const AddUserPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('user');
+  const [role, setRole] = useState<UserRole>(UserRole.SALES);
+  const [companyId, setCompanyId] = useState('');
   
   // Form errors
   const [errors, setErrors] = useState<{
@@ -24,6 +25,7 @@ const AddUserPage = () => {
     email?: string;
     password?: string;
     confirmPassword?: string;
+    companyId?: string;
   }>({});
 
   const validateForm = () => {
@@ -48,6 +50,11 @@ const AddUserPage = () => {
     if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
+
+    // Company ID is required for all roles except SUPER_ADMIN
+    if (role !== UserRole.SUPER_ADMIN && !companyId.trim()) {
+      newErrors.companyId = 'Company ID is required for this role';
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -63,13 +70,15 @@ const AddUserPage = () => {
     try {
       setSubmitting(true);
       
-      // Note: You'll need to implement the create method in userService
-      await userService.create({
+      const userData = {
         name,
         email,
         password,
-        role
-      });
+        role,
+        ...(role !== UserRole.SUPER_ADMIN && companyId ? { company_id: companyId } : {})
+      };
+      
+      await userService.create(userData);
       
       toast.success('User added successfully');
       router.push('/users');
@@ -187,14 +196,38 @@ const AddUserPage = () => {
                 <select
                   id="role"
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  onChange={(e) => setRole(e.target.value as UserRole)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
-                  <option value="user">User</option>
-                  <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
+                  <option value={UserRole.SUPER_ADMIN}>Super Admin</option>
+                  <option value={UserRole.ADMIN}>Admin</option>
+                  <option value={UserRole.MANAGER}>Manager</option>
+                  <option value={UserRole.SALES}>Sales</option>
+                  <option value={UserRole.SUPPORT}>Support</option>
                 </select>
               </div>
+
+              {/* Company ID (only for roles other than SUPER_ADMIN) */}
+              {role !== UserRole.SUPER_ADMIN && (
+                <div>
+                  <label htmlFor="companyId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Company ID <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="companyId"
+                    value={companyId}
+                    onChange={(e) => setCompanyId(e.target.value)}
+                    className={`block w-full sm:text-sm rounded-md shadow-sm ${
+                      errors.companyId 
+                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                        : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                    }`}
+                    placeholder="Enter company ID"
+                  />
+                  {errors.companyId && <p className="mt-1 text-sm text-red-600">{errors.companyId}</p>}
+                </div>
+              )}
             </div>
 
             {/* Action buttons */}

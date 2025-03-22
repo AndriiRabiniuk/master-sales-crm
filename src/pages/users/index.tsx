@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FiSearch, FiX, FiPlus, FiEdit, FiTrash2, FiMail, FiUser, FiEye, FiKey } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
-import userService, { User } from '@/services/api/userService';
+import userService, { User, UserRole } from '@/services/api/userService';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Pagination from '@/components/common/Pagination';
 
@@ -75,8 +75,7 @@ const UsersPage = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       try {
-        // You'll need to implement delete in the userService
-        // await userService.delete(id);
+        await userService.delete(id);
         toast.success('User deleted successfully');
         fetchUsers(currentPage);
       } catch (error) {
@@ -90,14 +89,18 @@ const UsersPage = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role.toLowerCase()) {
-      case 'admin':
+  const getRoleBadgeColor = (role: UserRole) => {
+    switch (role) {
+      case UserRole.SUPER_ADMIN:
+        return 'bg-purple-100 text-purple-800';
+      case UserRole.ADMIN:
         return 'bg-red-100 text-red-800';
-      case 'manager':
+      case UserRole.MANAGER:
         return 'bg-blue-100 text-blue-800';
-      case 'user':
+      case UserRole.SALES:
         return 'bg-green-100 text-green-800';
+      case UserRole.SUPPORT:
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -215,7 +218,7 @@ const UsersPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
-                          {user.role}
+                          {formatRoleLabel(user.role)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -275,6 +278,24 @@ const UsersPage = () => {
       </div>
     </MainLayout>
   );
+};
+
+// Helper function to format role labels for display
+const formatRoleLabel = (role: UserRole): string => {
+  switch (role) {
+    case UserRole.SUPER_ADMIN:
+      return 'Super Admin';
+    case UserRole.ADMIN:
+      return 'Admin';
+    case UserRole.MANAGER:
+      return 'Manager';
+    case UserRole.SALES:
+      return 'Sales';
+    case UserRole.SUPPORT:
+      return 'Support';
+    default:
+      return role;
+  }
 };
 
 export default UsersPage; 

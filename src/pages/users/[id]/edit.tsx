@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FiArrowLeft, FiSave } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
-import userService, { User } from '@/services/api/userService';
+import userService, { User, UserRole } from '@/services/api/userService';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const EditUserPage = () => {
@@ -18,12 +18,14 @@ const EditUserPage = () => {
   // Form state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('user');
+  const [role, setRole] = useState<UserRole>(UserRole.SALES);
+  const [companyId, setCompanyId] = useState('');
   
   // Form errors
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
+    companyId?: string;
   }>({});
 
   useEffect(() => {
@@ -42,6 +44,7 @@ const EditUserPage = () => {
       setName(data.name);
       setEmail(data.email);
       setRole(data.role);
+      setCompanyId(data.company_id || '');
     } catch (error) {
       console.error('Error fetching user:', error);
       toast.error('Failed to fetch user details');
@@ -64,6 +67,11 @@ const EditUserPage = () => {
       newErrors.email = 'Email is invalid';
     }
     
+    // Company ID is required for all roles except SUPER_ADMIN
+    if (role !== UserRole.SUPER_ADMIN && !companyId.trim()) {
+      newErrors.companyId = 'Company ID is required for this role';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -78,11 +86,14 @@ const EditUserPage = () => {
     try {
       setSubmitting(true);
       
-      await userService.update(id as string, {
+      const userData = {
         name,
         email,
-        role
-      });
+        role,
+        ...(role !== UserRole.SUPER_ADMIN && companyId ? { company_id: companyId } : {})
+      };
+      
+      await userService.update(id as string, userData);
       
       toast.success('User updated successfully');
       router.push(`/users/${id}`);
@@ -164,14 +175,38 @@ const EditUserPage = () => {
                   <select
                     id="role"
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) => setRole(e.target.value as UserRole)}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   >
-                    <option value="user">User</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
+                    <option value={UserRole.SUPER_ADMIN}>Super Admin</option>
+                    <option value={UserRole.ADMIN}>Admin</option>
+                    <option value={UserRole.MANAGER}>Manager</option>
+                    <option value={UserRole.SALES}>Sales</option>
+                    <option value={UserRole.SUPPORT}>Support</option>
                   </select>
                 </div>
+
+                {/* Company ID (only for roles other than SUPER_ADMIN) */}
+                {role !== UserRole.SUPER_ADMIN && (
+                  <div>
+                    <label htmlFor="companyId" className="block text-sm font-medium text-gray-700 mb-1">
+                      Company ID <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="companyId"
+                      value={companyId}
+                      onChange={(e) => setCompanyId(e.target.value)}
+                      className={`block w-full sm:text-sm rounded-md shadow-sm ${
+                        errors.companyId 
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                      }`}
+                      placeholder="Enter company ID"
+                    />
+                    {errors.companyId && <p className="mt-1 text-sm text-red-600">{errors.companyId}</p>}
+                  </div>
+                )}
               </div>
 
               {/* Action buttons */}

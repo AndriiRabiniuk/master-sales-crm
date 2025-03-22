@@ -1,12 +1,24 @@
 import { api, API_URL } from './index';
 
+// Enums
+export enum UserRole {
+  SUPER_ADMIN = 'super_admin',
+  ADMIN = 'admin',
+  MANAGER = 'manager',
+  SALES = 'sales',
+  SUPPORT = 'support'
+}
+
+// User interface based on the IUser interface
 export interface User {
   _id: string;
+  company_id?: any; // Optional for super_admin
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   created_at: string;
-  updated_at?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UsersResponse {
@@ -21,7 +33,8 @@ interface CreateUserData {
   name: string;
   email: string;
   password: string;
-  role: string;
+  role: UserRole;
+  company_id?: string;
 }
 
 const userService = {
@@ -57,7 +70,7 @@ const userService = {
     }
   },
 
-  update: async (id: string, userData: Partial<Omit<User, '_id' | 'created_at' | 'updated_at'>>): Promise<User> => {
+  update: async (id: string, userData: Partial<Omit<User, '_id' | 'created_at' | 'createdAt' | 'updatedAt'>>): Promise<User> => {
     try {
       const response = await api.put<User>(`${API_URL}/users/${id}`, userData);
       return response.data;
@@ -85,6 +98,15 @@ const userService = {
       return response.data;
     } catch (error) {
       console.error('Error creating user:', error);
+      throw error;
+    }
+  },
+
+  delete: async (id: string): Promise<void> => {
+    try {
+      await api.delete(`${API_URL}/users/${id}`);
+    } catch (error) {
+      console.error(`Error deleting user with id ${id}:`, error);
       throw error;
     }
   }

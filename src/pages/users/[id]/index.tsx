@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { FiArrowLeft, FiEdit, FiKey, FiUser, FiMail, FiCalendar, FiShield } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit, FiKey, FiUser, FiMail, FiCalendar, FiShield, FiBriefcase } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
-import userService, { User } from '@/services/api/userService';
+import userService, { User, UserRole } from '@/services/api/userService';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const UserDetailPage = () => {
@@ -33,20 +33,87 @@ const UserDetailPage = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+  const formatDate = (dateValue: string | Date | any) => {
+    if (!dateValue) return 'N/A';
+    
+    // If it's an object with _id and name properties (likely a reference)
+    if (typeof dateValue === 'object' && dateValue !== null) {
+      if (dateValue._id && dateValue.name) {
+        return `${dateValue.name}`;
+      }
+      
+      // If it's a Date object or has toLocaleString method
+      if (dateValue instanceof Date || dateValue.toLocaleString) {
+        return dateValue.toLocaleString();
+      }
+    }
+    
+    // Otherwise treat as string
+    try {
+      return new Date(dateValue).toLocaleString();
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return String(dateValue);
+    }
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role.toLowerCase()) {
-      case 'admin':
+  const getRoleBadgeColor = (role: UserRole | any) => {
+    // Handle case when role is an object
+    if (typeof role === 'object' && role !== null) {
+      if (role._id) {
+        // Try to match by role name if present
+        if (role.name) {
+          const roleName = role.name.toLowerCase();
+          if (roleName.includes('super') || roleName.includes('admin')) return 'bg-purple-100 text-purple-800';
+          if (roleName.includes('admin')) return 'bg-red-100 text-red-800';
+          if (roleName.includes('manager')) return 'bg-blue-100 text-blue-800';
+          if (roleName.includes('sales')) return 'bg-green-100 text-green-800';
+          if (roleName.includes('support')) return 'bg-yellow-100 text-yellow-800';
+        }
+        return 'bg-gray-100 text-gray-800';
+      }
+    }
+    
+    // Handle normal enum values
+    switch (role) {
+      case UserRole.SUPER_ADMIN:
+        return 'bg-purple-100 text-purple-800';
+      case UserRole.ADMIN:
         return 'bg-red-100 text-red-800';
-      case 'manager':
+      case UserRole.MANAGER:
         return 'bg-blue-100 text-blue-800';
-      case 'user':
+      case UserRole.SALES:
         return 'bg-green-100 text-green-800';
+      case UserRole.SUPPORT:
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatRoleLabel = (role: UserRole | any): string => {
+    // Handle case when role is an object
+    if (typeof role === 'object' && role !== null) {
+      if (role._id && role.name) {
+        return role.name; // Return name if it's a reference object
+      }
+      return 'Unknown Role';
+    }
+    
+    // Handle string role values
+    switch (role) {
+      case UserRole.SUPER_ADMIN:
+        return 'Super Admin';
+      case UserRole.ADMIN:
+        return 'Admin';
+      case UserRole.MANAGER:
+        return 'Manager';
+      case UserRole.SALES:
+        return 'Sales';
+      case UserRole.SUPPORT:
+        return 'Support';
+      default:
+        return String(role);
     }
   };
 
@@ -101,7 +168,7 @@ const UserDetailPage = () => {
                   </div>
                   <div className="mt-2">
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
-                      {user.role}
+                      {formatRoleLabel(user.role)}
                     </span>
                   </div>
                 </div>
@@ -114,9 +181,19 @@ const UserDetailPage = () => {
                     <FiShield className="mr-2" /> Role
                   </dt>
                   <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {user.role}
+                    {formatRoleLabel(user.role)}
                   </dd>
                 </div>
+                {user.company_id && (
+                  <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt className="text-sm font-medium text-gray-500 flex items-center">
+                      <FiBriefcase className="mr-2" /> Company ID
+                    </dt>
+                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      {user.company_id.name}
+                    </dd>
+                  </div>
+                )}
                 <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500 flex items-center">
                     <FiCalendar className="mr-2" /> Created At
@@ -125,16 +202,14 @@ const UserDetailPage = () => {
                     {formatDate(user.created_at)}
                   </dd>
                 </div>
-                {user.updated_at && (
-                  <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt className="text-sm font-medium text-gray-500 flex items-center">
-                      <FiCalendar className="mr-2" /> Last Updated
-                    </dt>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                      {formatDate(user.updated_at)}
-                    </dd>
-                  </div>
-                )}
+                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500 flex items-center">
+                    <FiCalendar className="mr-2" /> Last Updated
+                  </dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    {formatDate(user.updatedAt)}
+                  </dd>
+                </div>
               </dl>
             </div>
           </div>
