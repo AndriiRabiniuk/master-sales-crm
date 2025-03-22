@@ -1,34 +1,29 @@
 import { api, API_URL } from './index';
 
 export interface Task {
-  id: string;
-  titre: string;
+  _id: string;
+  title: string;
   description?: string;
-  dateEcheance?: string;
+  due_date?: string;
   statut: 'not_started' | 'in_progress' | 'completed' | 'delayed';
   priorite: 'low' | 'medium' | 'high';
-  client_id?: string;
-  client?: {
-    id: string;
-    nom: string;
+  interaction_id: string;
+  user_id: string;
+  interaction?: {
+    _id: string;
+    title: string;
+    lead_id: string;
   };
-  lead_id?: string;
-  lead?: {
-    id: string;
-    nom: string;
+  user?: {
+    _id: string;
+    name: string;
   };
-  contact_id?: string;
-  contact?: {
-    id: string;
-    nom: string;
-    prenom: string;
-  };
-  createdAt?: string;
-  updatedAt?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface TasksResponse {
-  tasks: [];
+  tasks: Task[];
   total: number;
   page: number;
   limit: number;
@@ -58,7 +53,31 @@ const taskService = {
     }
   },
 
-  create: async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<Task> => {
+  getByInteractionId: async (interactionId: string, page = 1, limit = 50): Promise<TasksResponse> => {
+    try {
+      const response = await api.get<TasksResponse>(`${API_URL}/interactions/${interactionId}/tasks`, {
+        params: { page, limit }
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching tasks for interaction ${interactionId}:`, error);
+      throw error;
+    }
+  },
+
+  getByUserId: async (userId: string, page = 1, limit = 50): Promise<TasksResponse> => {
+    try {
+      const response = await api.get<TasksResponse>(`${API_URL}/users/${userId}/tasks`, {
+        params: { page, limit }
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching tasks for user ${userId}:`, error);
+      throw error;
+    }
+  },
+
+  create: async (taskData: Omit<Task, '_id' | 'created_at' | 'updated_at'>): Promise<Task> => {
     try {
       const response = await api.post<Task>(`${API_URL}/tasks`, taskData);
       return response.data;
@@ -68,7 +87,7 @@ const taskService = {
     }
   },
 
-  update: async (id: string, taskData: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Task> => {
+  update: async (id: string, taskData: Partial<Omit<Task, '_id' | 'created_at' | 'updated_at'>>): Promise<Task> => {
     try {
       const response = await api.put<Task>(`${API_URL}/tasks/${id}`, taskData);
       return response.data;

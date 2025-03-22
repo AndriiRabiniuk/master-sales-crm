@@ -4,33 +4,49 @@ import { useRouter } from 'next/router';
 import { FiEye, FiEdit, FiTrash2, FiPlus, FiSearch, FiX } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
-import leadService, { Lead } from '@/services/api/leadService';
+import leadService, { Lead, LeadsResponse } from '@/services/api/leadService';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Pagination from '@/components/common/Pagination';
 
 const LeadsPage = () => {
   const router = useRouter();
-  const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [pagination, setPagination] = useState({
+    totalPages: 1,
+    currentPage: 1,
+    limit: 10,
+    total: 0,
+  });
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [isSearching, setIsSearching] = useState(false);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
-    fetchLeads(currentPage);
-  }, [currentPage]);
+    fetchLeads();
+  }, [pagination.currentPage]);
 
-  const fetchLeads = async (page: number, search = '') => {
+  const fetchLeads = async () => {
     try {
       setLoading(true);
-      const response = await leadService.getAll(page, itemsPerPage, search);
-      setLeads(response.leads);
-      setTotalPages(response.totalPages);
-      setTotalItems(response.total);
-      setCurrentPage(response.page);
+      const data: LeadsResponse = await leadService.getAll(
+        pagination.currentPage,
+        pagination.limit,
+        searchTerm
+      );
+      
+      // Filter by status if needed
+      let filteredLeads = data.leads;
+      if (filterStatus) {
+        filteredLeads = filteredLeads.filter((lead) => lead.statut === filterStatus);
+      }
+      
+      setLeads(filteredLeads);
+      setPagination({
+        totalPages: data.totalPages,
+        currentPage: data.page,
+        limit: data.limit,
+        total: data.total,
+      });
     } catch (error) {
       console.error('Error fetching leads:', error);
       toast.error('Failed to load leads');
@@ -41,28 +57,26 @@ const LeadsPage = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSearching(true);
-    setCurrentPage(1);
-    fetchLeads(1, searchTerm);
-  };
-
-  const clearSearch = () => {
-    setSearchTerm('');
-    setIsSearching(false);
-    setCurrentPage(1);
-    fetchLeads(1, '');
+    setPagination({ ...pagination, currentPage: 1 });
+    fetchLeads();
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    setPagination({ ...pagination, currentPage: page });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilterStatus(e.target.value);
+    setPagination({ ...pagination, currentPage: 1 });
+    fetchLeads();
+  };
+
+  const handleDeleteLead = async (leadId: string) => {
     if (window.confirm('Are you sure you want to delete this lead?')) {
       try {
-        await leadService.delete(id);
+        await leadService.delete(leadId);
         toast.success('Lead deleted successfully');
-        fetchLeads(currentPage, isSearching ? searchTerm : '');
+        fetchLeads();
       } catch (error) {
         console.error('Error deleting lead:', error);
         toast.error('Failed to delete lead');
@@ -70,15 +84,15 @@ const LeadsPage = () => {
     }
   };
 
-  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newItemsPerPage = parseInt(e.target.value);
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-    fetchLeads(1, isSearching ? searchTerm : '');
+  const formatValue = (value: number) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(value);
   };
 
   const getStatusBadgeColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status) {
       case 'new':
         return 'bg-blue-100 text-blue-800';
       case 'contacted':
@@ -113,183 +127,160 @@ const LeadsPage = () => {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Leads</h1>
-          <Link 
-            href="/leads/add" 
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <h1 className="text-2xl font-bold mb-4 md:mb-0">Leads</h1>
+          <Link
+            href="/leads/add"
             className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded flex items-center"
           >
-            <FiPlus className="mr-2" /> Add Lead
+            <FiPlus className="mr-2" /> Create Lead
           </Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow mb-6">
+        <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
           <div className="p-4 border-b">
-            <form onSubmit={handleSearch} className="flex items-center space-x-2">
-              <div className="relative flex-grow">
-                <input
-                  type="text"
-                  placeholder="Search leads by name..."
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                {isSearching && (
+            <div className="flex flex-col md:flex-row gap-4">
+              <form onSubmit={handleSearch} className="flex-1">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search leads..."
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <button
-                    type="button"
-                    onClick={clearSearch}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    type="submit"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-indigo-600 text-white px-3 py-1 rounded text-sm"
                   >
-                    <FiX />
+                    Search
                   </button>
-                )}
-              </div>
-              <button
-                type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded flex items-center"
-              >
-                <FiSearch className="mr-2" /> Search
-              </button>
-              {isSearching && (
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded"
+                </div>
+              </form>
+
+              <div className="w-full md:w-64">
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  value={filterStatus}
+                  onChange={handleFilterChange}
                 >
-                  Clear
-                </button>
-              )}
-            </form>
+                  <option value="">All statuses</option>
+                  <option value="new">New</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="won">Won</option>
+                  <option value="lost">Lost</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center p-12">
-              <LoadingSpinner size="large" color="indigo" />
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Client
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Source
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Value
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created At
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {leads.length > 0 ? (
-                      leads.map((lead) => (
-                        <tr key={lead._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{lead.name}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">
-                              {lead.client_id.name || '—'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSourceBadgeColor(lead.source)}`}>
-                              {lead.source}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(lead.statut)}`}>
-                              {lead.statut}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">
-                              {new Intl.NumberFormat('fr-FR', {
-                                style: 'currency',
-                                currency: 'EUR',
-                              }).format(lead.valeur_estimee)}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">
-                              {formatDate(lead.created_at)}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 flex">
-                            <Link
-                              href={`/leads/${lead._id}`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="View Details"
-                            >
-                              <FiEye />
-                            </Link>
-                            <Link
-                              href={`/leads/edit/${lead._id}`}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Edit"
-                            >
-                              <FiEdit />
-                            </Link>
-                            <button
-                              onClick={() => handleDelete(lead._id)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete"
-                            >
-                              <FiTrash2 />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                          {isSearching ? 'No leads found matching your search.' : 'No leads available.'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+          <div className="overflow-x-auto">
+            {loading ? (
+              <div className="flex justify-center items-center p-12">
+                <LoadingSpinner size="large" color="indigo" />
               </div>
+            ) : leads.length === 0 ? (
+              <div className="text-center p-12">
+                <p className="text-gray-500 mb-4">No leads found</p>
+                <Link
+                  href="/leads/add"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded inline-flex items-center"
+                >
+                  <FiPlus className="mr-2" /> Create your first lead
+                </Link>
+              </div>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Lead
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Client
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Source
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Est. Value
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {leads.map((lead) => (
+                    <tr key={lead._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{lead.name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {lead.client?.nom || 'No client'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
+                            lead.statut
+                          )}`}
+                        >
+                          {lead.statut.charAt(0).toUpperCase() + lead.statut.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {lead.source || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {lead.valeur_estimee ? formatValue(lead.valeur_estimee) : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
+                          <Link
+                            href={`/leads/${lead._id}`}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="View details"
+                          >
+                            <FiEye />
+                          </Link>
+                          <Link
+                            href={`/leads/${lead._id}/edit`}
+                            className="text-green-600 hover:text-green-900"
+                            title="Edit lead"
+                          >
+                            <FiEdit />
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteLead(lead._id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete lead"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
 
-              {totalPages > 1 && (
-                <div className="px-6 py-4 flex items-center justify-between border-t">
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-700 mr-2">Items per page:</span>
-                    <select
-                      value={itemsPerPage}
-                      onChange={handleItemsPerPageChange}
-                      className="border rounded px-2 py-1 text-sm"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    totalItems={totalItems}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
-            </>
+          {!loading && leads.length > 0 && (
+            <div className="px-4 py-3 border-t border-gray-200 sm:px-6">
+              <Pagination
+                totalPages={pagination.totalPages}
+                currentPage={pagination.currentPage}
+                onPageChange={handlePageChange}
+                totalItems={pagination.total}
+              />
+            </div>
           )}
         </div>
       </div>

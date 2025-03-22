@@ -19,16 +19,27 @@ const TasksPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchTasks(currentPage);
-  }, [currentPage, statusFilter]);
+  }, [currentPage, statusFilter, priorityFilter]);
 
   const fetchTasks = async (page: number, search = '') => {
     try {
       setLoading(true);
       const response = await taskService.getAll(page, itemsPerPage, search);
-      setTasks(response.tasks);
+      
+      // Client-side filtering (ideally this would be server-side)
+      let filteredTasks = response.tasks || [];
+      if (statusFilter && statusFilter !== 'all') {
+        filteredTasks = filteredTasks.filter(task => task.statut === statusFilter);
+      }
+      if (priorityFilter && priorityFilter !== 'all') {
+        filteredTasks = filteredTasks.filter(task => task.priorite === priorityFilter);
+      }
+      
+      setTasks(filteredTasks);
       setTotalPages(response.totalPages);
       setTotalItems(response.total);
       setCurrentPage(response.page);
@@ -96,6 +107,11 @@ const TasksPage = () => {
     setCurrentPage(1);
   };
 
+  const handlePriorityFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPriorityFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return '—';
     const date = new Date(dateString);
@@ -119,6 +135,36 @@ const TasksPage = () => {
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'not_started':
+        return 'bg-gray-100 text-gray-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'delayed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'not_started':
+        return 'Not Started';
+      case 'in_progress':
+        return 'In Progress';
+      case 'completed':
+        return 'Completed';
+      case 'delayed':
+        return 'Delayed';
+      default:
+        return status;
     }
   };
 
@@ -187,6 +233,20 @@ const TasksPage = () => {
                   <option value="not_started">Not Started</option>
                   <option value="in_progress">In Progress</option>
                   <option value="delayed">Delayed</option>
+                </select>
+              </div>
+              <div className="flex items-center">
+                <label htmlFor="priorityFilter" className="mr-2 text-sm text-gray-700">Priority:</label>
+                <select
+                  id="priorityFilter"
+                  value={priorityFilter}
+                  onChange={handlePriorityFilterChange}
+                  className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="all">All</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
                 </select>
               </div>
             </div>
@@ -282,21 +342,21 @@ const TasksPage = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 flex">
                             <Link
-                              href={`/tasks/${task.id}`}
+                              href={`/tasks/${task._id}`}
                               className="text-indigo-600 hover:text-indigo-900"
                               title="View Details"
                             >
                               <FiEye />
                             </Link>
                             <Link
-                              href={`/tasks/edit/${task.id}`}
+                              href={`/tasks/edit/${task._id}`}
                               className="text-blue-600 hover:text-blue-900"
                               title="Edit"
                             >
                               <FiEdit />
                             </Link>
                             <button
-                              onClick={() => handleDelete(task.id)}
+                              onClick={() => handleDelete(task._id)}
                               className="text-red-600 hover:text-red-900"
                               title="Delete"
                             >

@@ -42,6 +42,19 @@ const contactService = {
     return response.data;
   },
 
+  getByClientId: async (clientId: string, page = 1, limit = 50): Promise<ContactsResponse> => {
+    try {
+      const response = await api.get<ContactsResponse>(`${API_URL}/clients/${clientId}/contacts`, {
+        params: { page, limit }
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching contacts for client ${clientId}:`, error);
+      // If specific endpoint doesn't exist, fall back to filtered getAll
+      return contactService.getAll(page, limit, '', clientId);
+    }
+  },
+
   create: async (contactData: Omit<Contact, 'id' | 'client' | 'createdAt' | 'updatedAt'>): Promise<Contact> => {
     const response = await api.post(`${API_URL}/contacts`, contactData);
     return response.data;

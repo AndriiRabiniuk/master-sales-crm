@@ -228,21 +228,21 @@ const ContactsPage = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <Link
-                              href={`/contacts/${contact.id}`}
+                              href={`/contacts/${contact._id}`}
                               className="text-indigo-600 hover:text-indigo-900 mr-3"
                               title="View"
                             >
                               <FiEye />
                             </Link>
                             <Link
-                              href={`/contacts/edit/${contact.id}`}
+                              href={`/contacts/edit/${contact._id}`}
                               className="text-indigo-600 hover:text-indigo-900 mr-3"
                               title="Edit"
                             >
                               <FiEdit />
                             </Link>
                             <button
-                              onClick={() => handleDelete(contact.id)}
+                              onClick={() => handleDelete(contact._id)}
                               className="text-red-600 hover:text-red-900"
                               title="Delete"
                             >

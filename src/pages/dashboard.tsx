@@ -57,7 +57,7 @@ const Dashboard = () => {
         
         // Fetch tasks
         const tasks = await taskService.getAll();
-        const completedTasksCount = tasks.tasks.filter((task: any) => task.status === 'completed').length;
+        const completedTasksCount = tasks.tasks.filter((task: any) => task.statut === 'completed').length;
         
         setStats({
           clientCount: clients.total|| 0,
@@ -272,7 +272,7 @@ const Dashboard = () => {
               <li key={task._id}>
                 <div className="px-4 py-4 sm:px-6">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-indigo-600 truncate">{task.title}</p>
+                    <p className="text-sm font-medium text-indigo-600 truncate">{task.titre}</p>
                     <div className="ml-2 flex-shrink-0 flex">
                       <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         task.status === 'completed' 
@@ -289,7 +289,7 @@ const Dashboard = () => {
                     <div className="sm:flex">
                       <p className="flex items-center text-sm text-gray-500">
                         <FiCalendar className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" />
-                        Due: {new Date(task.dueDate).toLocaleDateString()}
+                        Due: {new Date(task.due_date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
