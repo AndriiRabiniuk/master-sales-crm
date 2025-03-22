@@ -2,7 +2,7 @@ import { api, API_URL } from './index';
 
 export interface Client {
   _id: string;
-  nom: string;
+  name: string;
   SIREN?: string;
   SIRET?: string;
   code_postal?: string;
