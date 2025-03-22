@@ -161,7 +161,7 @@ const InteractionsPage = () => {
                             href={`/interactions/${interaction._id}`}
                             className="hover:text-indigo-600"
                           >
-                            {interaction.title}
+                            {interaction.description}
                           </Link>
                         </div>
                       </td>
@@ -176,16 +176,16 @@ const InteractionsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {formatDate(interaction.date)}
+                          {formatDate(interaction.created_at)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {interaction.lead ? (
+                        {interaction.lead_id ? (
                           <Link
                             href={`/leads/${interaction.lead_id}`}
                             className="text-sm text-indigo-600 hover:text-indigo-900"
                           >
-                            {interaction.lead.name || 'View Lead'}
+                            {interaction.lead_id.name || 'View Lead'}
                           </Link>
                         ) : (
                           <span className="text-sm text-gray-500">N/A</span>

@@ -119,9 +119,6 @@ const NotesPage = () => {
                         Client
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created By
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -130,7 +127,7 @@ const NotesPage = () => {
                     {notes.map((note) => (
                       <tr key={note._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">{note.title}</div>
+                          <div className="text-sm font-medium text-gray-900">{note.contenu}</div>
                           <div className="text-xs text-gray-500 truncate max-w-xs">
                             {note.content}
                           </div>
@@ -139,19 +136,14 @@ const NotesPage = () => {
                           <div className="text-sm text-gray-500">{formatDate(note.created_at)}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {note.client && (
+                          {note.client_id && (
                             <Link
-                              href={`/clients/${note.client_id}`}
+                              href={`/clients/${note.client_id._id}`}
                               className="text-sm text-indigo-600 hover:text-indigo-900"
                             >
-                              {note.client.nom}
+                              {note.client_id.name}
                             </Link>
                           )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">
-                            {note.user ? note.user.name : 'Unknown'}
-                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-3">
