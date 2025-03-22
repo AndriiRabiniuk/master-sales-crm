@@ -7,10 +7,12 @@ import MainLayout from '@/components/layout/MainLayout';
 import { contactService } from '@/services/api';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Pagination from '@/components/common/Pagination';
+import { IContact } from '@/services/api/types';
+import { getNameFromRef, getIdFromRef } from '@/utils/dataFormatters';
 
 const ContactsPage = () => {
   const router = useRouter();
-  const [contacts, setContacts] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<IContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,9 +29,9 @@ const ContactsPage = () => {
     try {
       setLoading(true);
       const data = await contactService.getAll(page, 10, '', clientFilter);
-      setContacts(data.contacts);
-      setTotalPages(data.totalPages);
-      setTotalItems(data.total);
+      setContacts(data.contacts || []);
+      setTotalPages(data.pages || 1);
+      setTotalItems(data.total || 0);
     } catch (error) {
       console.error('Error fetching contacts:', error);
       toast.error('Failed to fetch contacts');
@@ -44,9 +46,9 @@ const ContactsPage = () => {
       setIsSearching(true);
       setLoading(true);
       const data = await contactService.getAll(1, 10, searchTerm, clientFilter);
-      setContacts(data.contacts);
-      setTotalPages(data.totalPages);
-      setTotalItems(data.total);
+      setContacts(data.contacts || []);
+      setTotalPages(data.pages || 1);
+      setTotalItems(data.total || 0);
       setCurrentPage(1);
     } catch (error) {
       console.error('Error searching contacts:', error);
@@ -189,12 +191,12 @@ const ContactsPage = () => {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {contacts.map((contact) => (
-                        <tr key={contact.id}>
+                        <tr key={contact._id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div>
                                 <div className="text-sm font-medium text-gray-900">
-                                  {contact.prenom} {contact.nom}
+                                  {contact.prenom} {contact.name}
                                 </div>
                               </div>
                             </div>
@@ -217,10 +219,10 @@ const ContactsPage = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             {contact.client_id ? (
                               <Link
-                                href={`/clients/${contact.client_id._id}`}
+                                href={`/clients/${getIdFromRef(contact.client_id)}`}
                                 className="text-sm text-indigo-600 hover:text-indigo-900"
                               >
-                                {contact.client_id.name}
+                                {getNameFromRef(contact.client_id)}
                               </Link>
                             ) : (
                               <span className="text-sm text-gray-500">-</span>
@@ -258,16 +260,14 @@ const ContactsPage = () => {
             </div>
           </div>
 
-          {totalPages > 1 && (
-            <div className="mt-6">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          )}
+          <div className="mt-6 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalItems={totalItems}
+            />
+          </div>
         </>
       )}
     </MainLayout>

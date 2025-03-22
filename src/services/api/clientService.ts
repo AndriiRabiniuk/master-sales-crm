@@ -1,28 +1,12 @@
 import { api, API_URL } from './index';
+import { 
+  IClient, 
+  ICreateClientRequest,
+  IPaginatedResponse
+} from './types';
 
-export interface Client {
-  _id: string;
-  name: string;
-  SIREN?: string;
-  SIRET?: string;
-  code_postal?: string;
-  code_NAF?: string;
-  chiffre_d_affaires?: number;
-  EBIT?: number;
-  latitude?: number;
-  longitude?: number;
-  pdm?: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface ClientsResponse {
-  clients: Client[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+// Response interface for client endpoints
+export type ClientsResponse = IPaginatedResponse<IClient>;
 
 const clientService = {
   getAll: async (page = 1, limit = 10, search = ''): Promise<ClientsResponse> => {
@@ -41,9 +25,9 @@ const clientService = {
     }
   },
 
-  getById: async (id: string): Promise<Client> => {
+  getById: async (id: string): Promise<IClient> => {
     try {
-      const response = await api.get<Client>(`${API_URL}/clients/${id}`);
+      const response = await api.get<IClient>(`${API_URL}/clients/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching client with id ${id}:`, error);
@@ -51,9 +35,9 @@ const clientService = {
     }
   },
 
-  create: async (clientData: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>): Promise<Client> => {
+  create: async (clientData: ICreateClientRequest): Promise<IClient> => {
     try {
-      const response = await api.post<Client>(`${API_URL}/clients`, clientData);
+      const response = await api.post<IClient>(`${API_URL}/clients`, clientData);
       return response.data;
     } catch (error) {
       console.error('Error creating client:', error);
@@ -61,9 +45,9 @@ const clientService = {
     }
   },
 
-  update: async (id: string, clientData: Partial<Omit<Client, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Client> => {
+  update: async (id: string, clientData: Partial<ICreateClientRequest>): Promise<IClient> => {
     try {
-      const response = await api.put<Client>(`${API_URL}/clients/${id}`, clientData);
+      const response = await api.put<IClient>(`${API_URL}/clients/${id}`, clientData);
       return response.data;
     } catch (error) {
       console.error(`Error updating client with id ${id}:`, error);

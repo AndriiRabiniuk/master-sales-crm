@@ -1,41 +1,14 @@
 import { api, API_URL } from './index';
+import { 
+  UserRole, 
+  IUser, 
+  IUserResponse, 
+  ICreateUserRequest,
+  IPaginatedResponse
+} from './types';
 
-// Enums
-export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
-  ADMIN = 'admin',
-  MANAGER = 'manager',
-  SALES = 'sales',
-  SUPPORT = 'support'
-}
-
-// User interface based on the IUser interface
-export interface User {
-  _id: string;
-  company_id?: any; // Optional for super_admin
-  name: string;
-  email: string;
-  role: UserRole;
-  created_at: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UsersResponse {
-  users: User[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-interface CreateUserData {
-  name: string;
-  email: string;
-  password: string;
-  role: UserRole;
-  company_id?: string;
-}
+// Response interface for user endpoints
+export type UsersResponse = IPaginatedResponse<IUserResponse>;
 
 const userService = {
   getAll: async (page = 1, limit = 50): Promise<UsersResponse> => {
@@ -50,9 +23,9 @@ const userService = {
     }
   },
 
-  getById: async (id: string): Promise<User> => {
+  getById: async (id: string): Promise<IUserResponse> => {
     try {
-      const response = await api.get<User>(`${API_URL}/users/${id}`);
+      const response = await api.get<IUserResponse>(`${API_URL}/users/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching user with id ${id}:`, error);
@@ -60,9 +33,9 @@ const userService = {
     }
   },
 
-  getCurrentUser: async (): Promise<User> => {
+  getCurrentUser: async (): Promise<IUserResponse> => {
     try {
-      const response = await api.get<User>(`${API_URL}/users/me`);
+      const response = await api.get<IUserResponse>(`${API_URL}/users/me`);
       return response.data;
     } catch (error) {
       console.error('Error fetching current user:', error);
@@ -70,9 +43,9 @@ const userService = {
     }
   },
 
-  update: async (id: string, userData: Partial<Omit<User, '_id' | 'created_at' | 'createdAt' | 'updatedAt'>>): Promise<User> => {
+  update: async (id: string, userData: Partial<Omit<IUserResponse, '_id' | 'created_at' | 'createdAt' | 'updatedAt'>>): Promise<IUserResponse> => {
     try {
-      const response = await api.put<User>(`${API_URL}/users/${id}`, userData);
+      const response = await api.put<IUserResponse>(`${API_URL}/users/${id}`, userData);
       return response.data;
     } catch (error) {
       console.error(`Error updating user with id ${id}:`, error);
@@ -92,9 +65,9 @@ const userService = {
     }
   },
 
-  create: async (userData: CreateUserData): Promise<User> => {
+  create: async (userData: ICreateUserRequest): Promise<IUserResponse> => {
     try {
-      const response = await api.post(`${API_URL}/users`, userData);
+      const response = await api.post<IUserResponse>(`${API_URL}/users`, userData);
       return response.data;
     } catch (error) {
       console.error('Error creating user:', error);
@@ -112,4 +85,5 @@ const userService = {
   }
 };
 
-export default userService; 
+export default userService;
+export { UserRole }; 

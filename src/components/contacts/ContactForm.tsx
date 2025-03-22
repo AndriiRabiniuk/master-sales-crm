@@ -3,23 +3,15 @@ import { useForm } from 'react-hook-form';
 import { FiSave, FiX } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-
-interface ContactFormData {
-  nom: string;
-  prenom: string;
-  email: string;
-  telephone?: string;
-  poste?: string;
-  client_id?: string;
-  notes?: string;
-}
+import { ICreateContactRequest, IClient } from '@/services/api/types';
+import { getNameFromRef } from '@/utils/dataFormatters';
 
 interface ContactFormProps {
-  initialData?: ContactFormData;
+  initialData?: ICreateContactRequest;
   isSubmitting: boolean;
-  onSubmit: (data: ContactFormData) => void;
+  onSubmit: (data: ICreateContactRequest) => void;
   mode: 'add' | 'edit';
-  clients?: { id: string; nom: string }[];
+  clients?: IClient[];
 }
 
 const ContactForm: React.FC<ContactFormProps> = ({
@@ -30,15 +22,14 @@ const ContactForm: React.FC<ContactFormProps> = ({
   clients = []
 }) => {
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors } } = useForm<ContactFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<ICreateContactRequest>({
     defaultValues: initialData || {
-      nom: '',
+      name: '',
       prenom: '',
       email: '',
       telephone: '',
-      poste: '',
-      client_id: clients.length > 0 ? clients[0].id : '',
-      notes: ''
+      fonction: '',
+      client_id: clients.length > 0 ? getNameFromRef(clients[0]._id) : '',
     }
   });
 
@@ -55,17 +46,17 @@ const ContactForm: React.FC<ContactFormProps> = ({
           <div className="mt-5 md:mt-0 md:col-span-2">
             <div className="grid grid-cols-6 gap-6">
               <div className="col-span-6 sm:col-span-3">
-                <label htmlFor="nom" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Last Name *
                 </label>
                 <input
                   type="text"
-                  id="nom"
-                  {...register('nom', { required: 'Last name is required' })}
-                  className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md ${errors.nom ? 'border-red-300' : ''}`}
+                  id="name"
+                  {...register('name', { required: 'Last name is required' })}
+                  className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md ${errors.name ? 'border-red-300' : ''}`}
                 />
-                {errors.nom && (
-                  <p className="mt-2 text-sm text-red-600">{errors.nom.message}</p>
+                {errors.name && (
+                  <p className="mt-2 text-sm text-red-600">{errors.name.message}</p>
                 )}
               </div>
 
@@ -118,13 +109,13 @@ const ContactForm: React.FC<ContactFormProps> = ({
               </div>
 
               <div className="col-span-6 sm:col-span-3">
-                <label htmlFor="poste" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="fonction" className="block text-sm font-medium text-gray-700">
                   Position
                 </label>
                 <input
                   type="text"
-                  id="poste"
-                  {...register('poste')}
+                  id="fonction"
+                  {...register('fonction')}
                   className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
@@ -140,23 +131,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
                 >
                   <option value="">None</option>
                   {clients.map(client => (
-                    <option key={client.id} value={client.id}>
-                      {client.nom}
+                    <option key={client._id} value={client._id}>
+                      {client.name}
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div className="col-span-6">
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                  Notes
-                </label>
-                <textarea
-                  id="notes"
-                  rows={3}
-                  {...register('notes')}
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                ></textarea>
               </div>
             </div>
           </div>
@@ -192,4 +171,4 @@ const ContactForm: React.FC<ContactFormProps> = ({
   );
 };
 
-export default ContactForm; 
+export default ContactForm;

@@ -67,11 +67,7 @@ const EditUserPage = () => {
       newErrors.email = 'Email is invalid';
     }
     
-    // Company ID is required for all roles except SUPER_ADMIN
-    if (role !== UserRole.SUPER_ADMIN && !companyId.trim()) {
-      newErrors.companyId = 'Company ID is required for this role';
-    }
-    
+ 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

@@ -4,11 +4,12 @@ import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import ContactForm from '@/components/contacts/ContactForm';
 import { contactService, clientService } from '@/services/api';
+import { IClient, ICreateContactRequest } from '@/services/api/types';
 
 const AddContactPage = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<IClient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -18,17 +19,22 @@ const AddContactPage = () => {
   const fetchClients = async () => {
     try {
       setIsLoading(true);
-      const data = await clientService.getAll(1, 100); // Get a large number of clients for the dropdown
-      setClients(data.clients);
+      const response = await clientService.getAll(1, 100); // Get a large number of clients for the dropdown
+      if (response && response.data) {
+        setClients(response.data);
+      } else {
+        setClients([]);
+      }
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast.error('Failed to fetch clients');
+      setClients([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: ICreateContactRequest) => {
     try {
       setIsSubmitting(true);
       await contactService.create(data);

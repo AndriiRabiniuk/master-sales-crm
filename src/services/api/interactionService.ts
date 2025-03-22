@@ -1,35 +1,12 @@
 import { api, API_URL } from './index';
+import { 
+  IInteraction, 
+  ICreateInteractionRequest,
+  IPaginatedResponse
+} from './types';
 
-export interface Interaction {
-  _id: string;
-  lead_id: string;
-  contact_id?: string;
-  user_id: string;
-  type: 'email' | 'call' | 'meeting' | 'other';
-  title: string;
-  content: string;
-  date: string;
-  created_at: string;
-  updated_at?: string;
-  user?: {
-    _id: string;
-    name: string;
-  };
-  contact?: {
-    _id: string;
-    name: string;
-    email?: string;
-    phone?: string;
-  };
-}
-
-export interface InteractionsResponse {
-  interactions: Interaction[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+// Response interface for interaction endpoints
+export type InteractionsResponse = IPaginatedResponse<IInteraction>;
 
 const interactionService = {
   getAll: async (page = 1, limit = 10): Promise<InteractionsResponse> => {
@@ -44,9 +21,9 @@ const interactionService = {
     }
   },
 
-  getById: async (id: string): Promise<Interaction> => {
+  getById: async (id: string): Promise<IInteraction> => {
     try {
-      const response = await api.get<Interaction>(`${API_URL}/interactions/${id}`);
+      const response = await api.get<IInteraction>(`${API_URL}/interactions/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching interaction with id ${id}:`, error);
@@ -66,9 +43,9 @@ const interactionService = {
     }
   },
 
-  create: async (interactionData: Omit<Interaction, '_id' | 'created_at' | 'updated_at'>): Promise<Interaction> => {
+  create: async (interactionData: ICreateInteractionRequest): Promise<IInteraction> => {
     try {
-      const response = await api.post<Interaction>(`${API_URL}/interactions`, interactionData);
+      const response = await api.post<IInteraction>(`${API_URL}/interactions`, interactionData);
       return response.data;
     } catch (error) {
       console.error('Error creating interaction:', error);
@@ -76,9 +53,9 @@ const interactionService = {
     }
   },
 
-  update: async (id: string, interactionData: Partial<Omit<Interaction, '_id' | 'created_at' | 'updated_at'>>): Promise<Interaction> => {
+  update: async (id: string, interactionData: Partial<ICreateInteractionRequest>): Promise<IInteraction> => {
     try {
-      const response = await api.put<Interaction>(`${API_URL}/interactions/${id}`, interactionData);
+      const response = await api.put<IInteraction>(`${API_URL}/interactions/${id}`, interactionData);
       return response.data;
     } catch (error) {
       console.error(`Error updating interaction with id ${id}:`, error);

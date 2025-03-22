@@ -5,14 +5,15 @@ import MainLayout from '@/components/layout/MainLayout';
 import ContactForm from '@/components/contacts/ContactForm';
 import { contactService, clientService } from '@/services/api';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { IClient, IContact, ICreateContactRequest } from '@/services/api/types';
 
 const EditContactPage = () => {
   const router = useRouter();
   const { id } = router.query;
-  const [contact, setContact] = useState<any>(null);
+  const [contact, setContact] = useState<IContact | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<IClient[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -39,15 +40,22 @@ const EditContactPage = () => {
 
   const fetchClients = async () => {
     try {
-      const data = await clientService.getAll(1, 100); // Get a large number of clients for the dropdown
-      setClients(data.clients);
+      const response = await clientService.getAll(1, 100); // Get a large number of clients for the dropdown
+      if (response && response.data) {
+        setClients(response.data);
+      } else {
+        setClients([]);
+      }
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast.error('Failed to fetch clients');
+      setClients([]);
     }
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: ICreateContactRequest) => {
+    if (!id) return;
+
     try {
       setIsSubmitting(true);
       await contactService.update(id as string, data);
@@ -59,6 +67,20 @@ const EditContactPage = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Convert contact data to form data format
+  const mapContactToFormData = (): ICreateContactRequest | undefined => {
+    if (!contact) return undefined;
+
+    return {
+      name: contact.name || '',
+      prenom: contact.prenom || '',
+      email: contact.email || '',
+      telephone: contact.telephone || '',
+      fonction: contact.fonction || '',
+      client_id: typeof contact.client_id === 'object' ? contact.client_id._id : contact.client_id || '',
+    };
   };
 
   if (isLoading) {
@@ -91,7 +113,7 @@ const EditContactPage = () => {
 
       <div className="mt-6">
         <ContactForm
-          initialData={contact}
+          initialData={mapContactToFormData()}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
           mode="edit"
