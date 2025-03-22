@@ -17,6 +17,13 @@ export interface UsersResponse {
   totalPages: number;
 }
 
+interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
 const userService = {
   getAll: async (page = 1, limit = 50): Promise<UsersResponse> => {
     try {
@@ -68,6 +75,16 @@ const userService = {
       });
     } catch (error) {
       console.error(`Error updating password for user with id ${id}:`, error);
+      throw error;
+    }
+  },
+
+  create: async (userData: CreateUserData): Promise<User> => {
+    try {
+      const response = await api.post(`${API_URL}/users`, userData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating user:', error);
       throw error;
     }
   }
