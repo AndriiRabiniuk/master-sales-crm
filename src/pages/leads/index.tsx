@@ -158,20 +158,6 @@ const LeadsPage = () => {
                   </button>
                 </div>
               </form>
-
-              <div className="w-full md:w-64">
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  value={filterStatus}
-                  onChange={handleFilterChange}
-                >
-                  <option value="">All statuses</option>
-                  <option value="new">New</option>
-                  <option value="contacted">Contacted</option>
-                  <option value="won">Won</option>
-                  <option value="lost">Lost</option>
-                </select>
-              </div>
             </div>
           </div>
 
@@ -222,7 +208,7 @@ const LeadsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {lead.client?.nom || 'No client'}
+                          {lead.client_id?.name || 'No client'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

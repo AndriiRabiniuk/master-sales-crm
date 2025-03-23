@@ -103,6 +103,13 @@ const InteractionsPage = () => {
                 Search
               </button>
             </form>
+            <Link
+              href="/interactions/new"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded flex items-center"
+            >
+              <FiPlus className="mr-2" />
+              Add Interaction
+            </Link>
           </div>
         </div>
 
@@ -124,7 +131,7 @@ const InteractionsPage = () => {
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
-                      Title
+                      Description
                     </th>
                     <th
                       scope="col"
@@ -176,19 +183,17 @@ const InteractionsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {formatDate(interaction.created_at)}
+                          {formatDate(interaction.date_interaction || interaction.created_at)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {interaction.lead_id ? (
+                        {interaction.lead_id && (
                           <Link
-                            href={`/leads/${interaction.lead_id}`}
+                            href={`/leads/${interaction.lead_id._id}`}
                             className="text-sm text-indigo-600 hover:text-indigo-900"
                           >
-                            {interaction.lead_id.name || 'View Lead'}
+                            {interaction.lead_id.name}
                           </Link>
-                        ) : (
-                          <span className="text-sm text-gray-500">N/A</span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -206,13 +211,6 @@ const InteractionsPage = () => {
                             title="Edit interaction"
                           >
                             <FiEdit />
-                          </Link>
-                          <Link
-                            href={`/interactions/${interaction._id}/tasks`}
-                            className="text-green-600 hover:text-green-900"
-                            title="View tasks"
-                          >
-                            <FiPlus />
                           </Link>
                           <button
                             onClick={() => handleDeleteInteraction(interaction._id)}

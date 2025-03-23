@@ -5,32 +5,29 @@ import { FiArrowLeft, FiSave } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import noteService, { Note } from '@/services/api/noteService';
+import noteService, { CreateNoteRequest } from '@/services/api/noteService';
+import clientService from '@/services/api/clientService';
 
-const EditNotePage = () => {
+const AddNotePage = () => {
   const router = useRouter();
-  const { id } = router.query;
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [note, setNote] = useState<Note | null>(null);
-  const [content, setContent] = useState('');
+  const [contenu, setContenu] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [clients, setClients] = useState<any[]>([]);
 
   useEffect(() => {
-    if (id) {
-      fetchNote(id as string);
-    }
-  }, [id]);
+    fetchClients();
+  }, []);
 
-  const fetchNote = async (noteId: string) => {
+  const fetchClients = async () => {
     try {
       setLoading(true);
-      const data = await noteService.getById(noteId);
-      setNote(data);
-      setContent(data.contenu);
+      const response = await clientService.getAll(1, 100); // Get a large number of clients for the dropdown
+      setClients(response.clients || []);
     } catch (error) {
-      console.error('Error fetching note:', error);
-      toast.error('Failed to load note details');
-      router.push('/notes');
+      console.error('Error fetching clients:', error);
+      toast.error('Failed to load clients');
     } finally {
       setLoading(false);
     }
@@ -38,28 +35,31 @@ const EditNotePage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!content.trim()) {
-      toast.error('Content is required');
+
+    if (!contenu.trim()) {
+      toast.error('Note content is required');
       return;
     }
-    
-    if (!note) return;
-    
+
+    if (!clientId) {
+      toast.error('Please select a client');
+      return;
+    }
+
     try {
       setSubmitting(true);
-      
-      const updatedNote = {
-        contenu: content
+
+      const noteData: CreateNoteRequest = {
+        contenu,
+        client_id: clientId,
       };
-      
-      await noteService.update(note._id, updatedNote);
-      toast.success('Note updated successfully');
-      router.push(`/notes/${note._id}`);
+
+      const newNote = await noteService.create(noteData);
+      toast.success('Note created successfully');
+      router.push(`/notes/${newNote._id}`);
     } catch (error) {
-      console.error('Error updating note:', error);
-      toast.error('Failed to update note');
-    } finally {
+      console.error('Error creating note:', error);
+      toast.error('Failed to create note');
       setSubmitting(false);
     }
   };
@@ -69,44 +69,61 @@ const EditNotePage = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <Link
-            href={note ? `/notes/${note._id}` : '/notes'}
+            href="/notes"
             className="inline-flex items-center text-indigo-600 hover:text-indigo-900"
           >
-            <FiArrowLeft className="mr-2" /> Back to {note ? 'Note Details' : 'Notes'}
+            <FiArrowLeft className="mr-2" /> Back to Notes
           </Link>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="p-6">
-            <h1 className="text-2xl font-semibold text-gray-800 mb-6">Edit Note</h1>
+            <h1 className="text-2xl font-semibold text-gray-800 mb-6">Add New Note</h1>
 
             {loading ? (
               <div className="flex justify-center py-10">
                 <LoadingSpinner />
               </div>
-            ) : !note ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Note not found</p>
-              </div>
             ) : (
               <form onSubmit={handleSubmit}>
+                <div className="mb-4">
+                  <label htmlFor="client" className="block text-sm font-medium text-gray-700 mb-1">
+                    Client <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="client"
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Select a client</option>
+                    {clients.map((client) => (
+                      <option key={client._id} value={client._id}>
+                        {client.name || client.nom}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="mb-6">
-                  <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="contenu" className="block text-sm font-medium text-gray-700 mb-1">
                     Content <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    id="content"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    id="contenu"
+                    value={contenu}
+                    onChange={(e) => setContenu(e.target.value)}
+                    rows={6}
                     required
-                    rows={8}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Enter note content..."
                   />
                 </div>
 
                 <div className="flex justify-end space-x-3">
                   <Link
-                    href={`/notes/${note._id}`}
+                    href="/notes"
                     className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Cancel
@@ -119,12 +136,12 @@ const EditNotePage = () => {
                     {submitting ? (
                       <>
                         <LoadingSpinner size="small" color="white" />
-                        <span className="ml-2">Saving...</span>
+                        <span className="ml-2">Creating...</span>
                       </>
                     ) : (
                       <>
-                        <FiSave className="mr-2" />
-                        Save Changes
+                        <FiSave className="mr-2 -ml-1 h-5 w-5" />
+                        Create Note
                       </>
                     )}
                   </button>
@@ -138,4 +155,4 @@ const EditNotePage = () => {
   );
 };
 
-export default EditNotePage; 
+export default AddNotePage; 

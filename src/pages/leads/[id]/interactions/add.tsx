@@ -7,7 +7,8 @@ import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import leadService from '@/services/api/leadService';
 import contactService from '@/services/api/contactService';
-import interactionService, { Interaction } from '@/services/api/interactionService';
+import interactionService from '@/services/api/interactionService';
+import { InteractionType } from '@/services/api/types';
 
 const AddInteractionPage = () => {
   const router = useRouter();
@@ -20,11 +21,10 @@ const AddInteractionPage = () => {
   const [contacts, setContacts] = useState<any[]>([]);
   
   // Form state
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState<Interaction['type']>('call');
-  const [content, setContent] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [contactId, setContactId] = useState('');
+  const [description, setDescription] = useState('');
+  const [typeInteraction, setTypeInteraction] = useState<InteractionType>(InteractionType.EMAIL);
+  const [dateInteraction, setDateInteraction] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
 
   useEffect(() => {
     if (leadId) {
@@ -56,7 +56,7 @@ const AddInteractionPage = () => {
       
       if (leadData.client_id) {
         const contactsData = await contactService.getByClientId(leadData.client_id);
-        setContacts(contactsData.contacts || []);
+        setContacts(contactsData.data || []);
       }
     } catch (error) {
       console.error('Error fetching contacts:', error);
@@ -66,34 +66,38 @@ const AddInteractionPage = () => {
     }
   };
 
+  const handleContactChange = (contactId: string) => {
+    setSelectedContacts(prev => {
+      if (prev.includes(contactId)) {
+        return prev.filter(id => id !== contactId);
+      } else {
+        return [...prev, contactId];
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim()) {
-      toast.error('Interaction title is required');
+    if (!description.trim()) {
+      toast.error('Interaction description is required');
       return;
     }
 
     try {
       setSubmitting(true);
       
-      // Use the authenticated user's ID from a context or auth service if available
-      // For now, we'll use a placeholder
-      const userId = localStorage.getItem('userId') || ''; // Replace with actual user ID from auth context
-      
       const interactionData = {
         lead_id: leadId,
-        contact_id: contactId || undefined,
-        user_id: userId,
-        type,
-        title,
-        content,
-        date
+        description,
+        type_interaction: typeInteraction,
+        date_interaction: new Date(dateInteraction).toISOString(),
+        contacts: selectedContacts.length > 0 ? selectedContacts : undefined
       };
 
       await interactionService.create(interactionData);
       toast.success('Interaction added successfully');
-      router.push(`/leads/${leadId}/interactions`);
+      router.push(`/interactions`);
     } catch (error) {
       console.error('Error creating interaction:', error);
       toast.error('Failed to add interaction');
@@ -152,34 +156,33 @@ const AddInteractionPage = () => {
           <div className="p-6">
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                  Title <span className="text-red-500">*</span>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  Description <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                <textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   required
+                  rows={4}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
                     Type
                   </label>
                   <select
                     id="type"
-                    value={type}
-                    onChange={(e) => setType(e.target.value as Interaction['type'])}
+                    value={typeInteraction}
+                    onChange={(e) => setTypeInteraction(e.target.value as InteractionType)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
-                    <option value="call">Call</option>
-                    <option value="email">Email</option>
-                    <option value="meeting">Meeting</option>
-                    <option value="other">Other</option>
+                    <option value={InteractionType.CALL}>Call</option>
+                    <option value={InteractionType.EMAIL}>Email</option>
+                    <option value={InteractionType.MEETING}>Meeting</option>
                   </select>
                 </div>
 
@@ -190,46 +193,42 @@ const AddInteractionPage = () => {
                   <input
                     type="date"
                     id="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    value={dateInteraction}
+                    onChange={(e) => setDateInteraction(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-1">
-                    Contact
+              {contacts.length > 0 && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Contacts
                   </label>
-                  <select
-                    id="contact"
-                    value={contactId}
-                    onChange={(e) => setContactId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    <option value="">Select a contact (optional)</option>
+                  <div className="bg-gray-50 p-3 rounded-md max-h-60 overflow-y-auto">
                     {contacts.map((contact) => (
-                      <option key={contact._id} value={contact._id}>
-                        {contact.name || `${contact.prenom} ${contact.nom}`}
-                      </option>
+                      <div key={contact._id} className="flex items-center mb-2">
+                        <input
+                          type="checkbox"
+                          id={`contact-${contact._id}`}
+                          value={contact._id}
+                          checked={selectedContacts.includes(contact._id)}
+                          onChange={() => handleContactChange(contact._id)}
+                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
+                        <label 
+                          htmlFor={`contact-${contact._id}`} 
+                          className="ml-2 block text-sm text-gray-900"
+                        >
+                          {contact.prenom} {contact.name} - {contact.email}
+                        </label>
+                      </div>
                     ))}
-                  </select>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="mb-6">
-                <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-                  Content
-                </label>
-                <textarea
-                  id="content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end space-x-3 mt-6">
                 <Link
                   href={`/leads/${leadId}/interactions`}
                   className="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded"
@@ -248,7 +247,8 @@ const AddInteractionPage = () => {
                     </>
                   ) : (
                     <>
-                      <FiSave className="mr-2" /> Save Interaction
+                      <FiSave className="mr-2" />
+                      Save Interaction
                     </>
                   )}
                 </button>

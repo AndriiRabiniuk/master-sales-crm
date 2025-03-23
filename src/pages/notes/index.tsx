@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { FiEdit, FiEye, FiTrash2 } from 'react-icons/fi';
+import { FiEdit, FiEye, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -75,7 +75,13 @@ const NotesPage = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-800">Notes</h1>
-          <div className="flex space-x-2">
+          <div className="flex space-x-3">
+            <Link
+              href="/notes/add"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center"
+            >
+              <FiPlus className="mr-2" /> Add Note
+            </Link>
             <form onSubmit={handleSearch} className="flex">
               <input
                 type="text"
@@ -88,7 +94,7 @@ const NotesPage = () => {
                 type="submit"
                 className="bg-indigo-600 text-white px-4 py-2 rounded-r hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                Search
+                <FiSearch className="w-4 h-4" />
               </button>
             </form>
           </div>
@@ -102,6 +108,12 @@ const NotesPage = () => {
           ) : notes.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">No notes found</p>
+              <Link
+                href="/notes/add"
+                className="mt-4 inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
+              >
+                <FiPlus className="inline mr-2" /> Add Your First Note
+              </Link>
             </div>
           ) : (
             <>
@@ -110,7 +122,7 @@ const NotesPage = () => {
                   <thead>
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Title
+                        Content
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
@@ -127,10 +139,7 @@ const NotesPage = () => {
                     {notes.map((note) => (
                       <tr key={note._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">{note.contenu}</div>
-                          <div className="text-xs text-gray-500 truncate max-w-xs">
-                            {note.content}
-                          </div>
+                          <div className="text-sm font-medium text-gray-900 truncate max-w-xs">{note.contenu}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-500">{formatDate(note.created_at)}</div>

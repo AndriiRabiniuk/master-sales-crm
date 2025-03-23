@@ -5,18 +5,18 @@ import { FiArrowLeft, FiSave } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import interactionService, { Interaction } from '@/services/api/interactionService';
+import interactionService from '@/services/api/interactionService';
+import { InteractionType } from '@/services/api/types';
 
 const EditInteractionPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [interaction, setInteraction] = useState<Interaction | null>(null);
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState<Interaction['type']>('call');
-  const [content, setContent] = useState('');
-  const [date, setDate] = useState('');
+  const [interaction, setInteraction] = useState<any>(null);
+  const [description, setDescription] = useState('');
+  const [typeInteraction, setTypeInteraction] = useState('');
+  const [dateInteraction, setDateInteraction] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -29,10 +29,16 @@ const EditInteractionPage = () => {
       setLoading(true);
       const data = await interactionService.getById(interactionId);
       setInteraction(data);
-      setTitle(data.title);
-      setType(data.type);
-      setContent(data.content);
-      setDate(data.date ? new Date(data.date).toISOString().split('T')[0] : '');
+      setDescription(data.description || '');
+      setTypeInteraction(data.type_interaction || 'email');
+      
+      // Format date for input field
+      if (data.date_interaction) {
+        const date = new Date(data.date_interaction);
+        setDateInteraction(date.toISOString().split('T')[0]);
+      } else {
+        setDateInteraction(new Date().toISOString().split('T')[0]);
+      }
     } catch (error) {
       console.error('Error fetching interaction:', error);
       toast.error('Failed to load interaction details');
@@ -45,17 +51,12 @@ const EditInteractionPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim()) {
-      toast.error('Title is required');
+    if (!description.trim()) {
+      toast.error('Description is required');
       return;
     }
     
-    if (!content.trim()) {
-      toast.error('Content is required');
-      return;
-    }
-    
-    if (!date) {
+    if (!dateInteraction) {
       toast.error('Date is required');
       return;
     }
@@ -66,10 +67,9 @@ const EditInteractionPage = () => {
       setSubmitting(true);
       
       const updatedInteraction = {
-        title,
-        type,
-        content,
-        date
+        description,
+        type_interaction: typeInteraction as InteractionType,
+        date_interaction: new Date(dateInteraction).toISOString()
       };
       
       await interactionService.update(interaction._id, updatedInteraction);
@@ -109,20 +109,6 @@ const EditInteractionPage = () => {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                    Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
@@ -130,15 +116,14 @@ const EditInteractionPage = () => {
                     </label>
                     <select
                       id="type"
-                      value={type}
-                      onChange={(e) => setType(e.target.value as Interaction['type'])}
+                      value={typeInteraction}
+                      onChange={(e) => setTypeInteraction(e.target.value)}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="call">Call</option>
                       <option value="meeting">Meeting</option>
                       <option value="email">Email</option>
-                      <option value="other">Other</option>
                     </select>
                   </div>
 
@@ -149,8 +134,8 @@ const EditInteractionPage = () => {
                     <input
                       type="date"
                       id="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
+                      value={dateInteraction}
+                      onChange={(e) => setDateInteraction(e.target.value)}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
@@ -158,13 +143,13 @@ const EditInteractionPage = () => {
                 </div>
 
                 <div className="mb-6">
-                  <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-                    Content <span className="text-red-500">*</span>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    id="content"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     required
                     rows={6}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -189,9 +174,11 @@ const EditInteractionPage = () => {
                         <span className="ml-2">Saving...</span>
                       </>
                     ) : (
-                      <FiSave className="mr-2" />
+                      <>
+                        <FiSave className="mr-2" />
+                        Save Changes
+                      </>
                     )}
-                    Save Changes
                   </button>
                 </div>
               </form>
