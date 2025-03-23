@@ -9,10 +9,10 @@ import {
 export type InteractionsResponse = IPaginatedResponse<IInteraction>;
 
 const interactionService = {
-  getAll: async (page = 1, limit = 10): Promise<InteractionsResponse> => {
+  getAll: async (page = 1, limit = 10, search = ''): Promise<InteractionsResponse> => {
     try {
       const response = await api.get<InteractionsResponse>(`${API_URL}/interactions`, {
-        params: { page, limit }
+        params: { page, limit, search }
       });
       return response.data;
     } catch (error) {

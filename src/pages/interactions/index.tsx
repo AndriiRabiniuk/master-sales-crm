@@ -25,7 +25,7 @@ const InteractionsPage = () => {
   const fetchInteractions = async () => {
     try {
       setLoading(true);
-      const response = await interactionService.getAll(page, limit);
+      const response = await interactionService.getAll(page, limit, searchTerm);
       setInteractions(response.interactions || []);
       setTotalPages(response.totalPages || 1);
       setTotalItems(response.total || 0);
@@ -43,6 +43,7 @@ const InteractionsPage = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setPage(1); // Reset to first page when searching
     fetchInteractions();
   };
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface ClientFormData {
-  nom: string;
+  name: string;
   SIREN: string;
   SIRET: string;
   code_postal: string;
@@ -37,7 +37,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
     formState: { errors },
   } = useForm<ClientFormData>({
     defaultValues: initialData || {
-      nom: '',
+      name: '',
       SIREN: '',
       SIRET: '',
       code_postal: '',
@@ -65,7 +65,22 @@ const ClientForm: React.FC<ClientFormProps> = ({
           <div className="mt-5 md:mt-0 md:col-span-2">
             <div className="grid grid-cols-6 gap-6">
               {/* Company Name */}
-        
+              <div className="col-span-6">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Client Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  {...register('name', { required: 'Company name is required' })}
+                  className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md ${
+                    errors.name ? 'border-red-300' : ''
+                  }`}
+                />
+                {errors.name && (
+                  <p className="mt-2 text-sm text-red-600">{errors.name.message}</p>
+                )}
+              </div>
 
               {/* SIREN */}
               <div className="col-span-6 sm:col-span-3">

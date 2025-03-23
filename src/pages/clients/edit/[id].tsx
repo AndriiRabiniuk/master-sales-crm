@@ -71,7 +71,7 @@ const EditClientPage = () => {
     <MainLayout>
       <div className="pb-5 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-          Edit Client: {client.nom}
+          Edit Client: {client.name}
         </h2>
       </div>
 

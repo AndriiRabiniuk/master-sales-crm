@@ -42,7 +42,7 @@ const AddTaskPage = () => {
 
   const fetchInteractions = async () => {
     try {
-      const response = await interactionService.getAll();
+      const response = await interactionService.getAll(1,500);
       setInteractions(response.interactions || []);
       return response;
     } catch (error) {
