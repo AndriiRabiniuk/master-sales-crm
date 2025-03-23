@@ -20,11 +20,7 @@ const AddContactPage = () => {
     try {
       setIsLoading(true);
       const response = await clientService.getAll(1, 100); // Get a large number of clients for the dropdown
-      if (response && response.data) {
-        setClients(response.data);
-      } else {
-        setClients([]);
-      }
+      setClients(response.clients || []);
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast.error('Failed to fetch clients');

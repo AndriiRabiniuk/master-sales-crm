@@ -41,11 +41,7 @@ const EditContactPage = () => {
   const fetchClients = async () => {
     try {
       const response = await clientService.getAll(1, 100); // Get a large number of clients for the dropdown
-      if (response && response.data) {
-        setClients(response.data);
-      } else {
-        setClients([]);
-      }
+      setClients(response.clients || []);
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast.error('Failed to fetch clients');
@@ -107,7 +103,7 @@ const EditContactPage = () => {
     <MainLayout>
       <div className="pb-5 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-          Edit Contact: {contact.prenom} {contact.nom}
+          Edit Contact: {contact.prenom} {contact.name}
         </h2>
       </div>
 

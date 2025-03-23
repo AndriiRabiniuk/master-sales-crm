@@ -65,22 +65,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
           <div className="mt-5 md:mt-0 md:col-span-2">
             <div className="grid grid-cols-6 gap-6">
               {/* Company Name */}
-              <div className="col-span-6 sm:col-span-3">
-                <label htmlFor="nom" className="block text-sm font-medium text-gray-700">
-                  Company Name
-                </label>
-                <input
-                  type="text"
-                  id="nom"
-                  {...register('nom', { required: 'Company name is required' })}
-                  className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md ${
-                    errors.nom ? 'border-red-300' : ''
-                  }`}
-                />
-                {errors.nom && (
-                  <p className="mt-2 text-sm text-red-600">{errors.nom.message}</p>
-                )}
-              </div>
+        
 
               {/* SIREN */}
               <div className="col-span-6 sm:col-span-3">
