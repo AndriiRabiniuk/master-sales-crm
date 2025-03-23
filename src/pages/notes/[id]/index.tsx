@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { FiEdit, FiArrowLeft } from 'react-icons/fi';
+import { FiEdit, FiArrowLeft, FiBriefcase, FiCalendar, FiFileText } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -69,7 +69,14 @@ const NoteDetailPage = () => {
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
-                <h1 className="text-2xl font-semibold text-gray-800">{note.title}</h1>
+                <div>
+                  <h1 className="text-2xl font-semibold text-gray-800">Note</h1>
+                  <div className="mt-1 text-sm text-gray-500">
+                    Client: <Link href={`/clients/${note.client_id._id}`} className="text-indigo-600 hover:text-indigo-800">
+                      {note.client_id.name}
+                    </Link>
+                  </div>
+                </div>
                 <Link
                   href={`/notes/${note._id}/edit`}
                   className="p-2 text-blue-600 hover:text-blue-900 rounded-full hover:bg-gray-100"
@@ -79,21 +86,44 @@ const NoteDetailPage = () => {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <p className="text-sm text-gray-500">Created</p>
-                  <p className="text-sm font-medium">{formatDate(note.created_at)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Last Updated</p>
-                  <p className="text-sm font-medium">{formatDate(note.updated_at)}</p>
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex items-start">
+                    <FiBriefcase className="mt-1 mr-2 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Company</p>
+                      <p className="text-sm font-medium">
+                        {note.client_id.company_id.name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <FiCalendar className="mt-1 mr-2 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Created</p>
+                      <p className="text-sm font-medium">{formatDate(note.created_at)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <FiCalendar className="mt-1 mr-2 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Last Updated</p>
+                      <p className="text-sm font-medium">{formatDate(note.updatedAt)}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="mb-6">
                 <h2 className="text-lg font-medium text-gray-800 mb-2">Content</h2>
                 <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap break-words">
-                  {note.content}
+                  {note.contenu}
+                </div>
+              </div>
+              
+              <div className="border-t pt-4 mt-6">
+                <div className="flex justify-between text-sm text-gray-500">
+                  <div>ID: {note._id}</div>
                 </div>
               </div>
             </div>

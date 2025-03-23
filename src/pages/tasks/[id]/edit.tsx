@@ -154,29 +154,12 @@ const EditTaskPage = () => {
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     >
-                      <option value="not_started">Not Started</option>
-                      <option value="in_progress">In Progress</option>
+                     <option value="in progress">In Progress</option>
                       <option value="completed">Completed</option>
-                      <option value="delayed">Delayed</option>
+                      <option value="pending">pending</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
-                      Priority <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="priority"
-                      value={priority}
-                      onChange={(e) => setPriority(e.target.value as Task['priorite'])}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-3">

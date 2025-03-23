@@ -36,12 +36,12 @@ const EditTaskPage = () => {
       setLoading(true);
       const data = await taskService.getById(taskId);
       setTask(data);
-      setTitle(data.title);
+      setTitle(data.titre);
       setDescription(data.description || '');
       setDueDate(data.due_date ? new Date(data.due_date).toISOString().split('T')[0] : '');
       setStatus(data.statut);
       setPriority(data.priorite);
-      setUserId(data.user_id);
+      setUserId(data.assigned_to._id);
       
       if (data.interaction_id) {
         fetchInteraction(data.interaction_id);
@@ -206,10 +206,9 @@ const EditTaskPage = () => {
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     >
-                      <option value="not_started">Not Started</option>
-                      <option value="in_progress">In Progress</option>
+                     <option value="in progress">In Progress</option>
                       <option value="completed">Completed</option>
-                      <option value="delayed">Delayed</option>
+                      <option value="pending">pending</option>
                     </select>
                   </div>
 

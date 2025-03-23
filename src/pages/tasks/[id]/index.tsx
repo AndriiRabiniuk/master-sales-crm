@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { FiEdit, FiArrowLeft } from 'react-icons/fi';
+import { FiEdit, FiArrowLeft, FiUser, FiCalendar, FiBriefcase, FiFileText } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -45,16 +45,31 @@ const TaskDetailPage = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'not_started':
-        return 'Not Started';
+      case 'pending':
+        return 'Pending';
       case 'in_progress':
         return 'In Progress';
       case 'completed':
         return 'Completed';
-      case 'delayed':
-        return 'Delayed';
+      case 'canceled':
+        return 'Canceled';
       default:
         return status;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'text-yellow-600';
+      case 'in_progress':
+        return 'text-blue-600';
+      case 'completed':
+        return 'text-green-600';
+      case 'canceled':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
@@ -82,9 +97,9 @@ const TaskDetailPage = () => {
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
-                <h1 className="text-2xl font-semibold text-gray-800">{task.title}</h1>
+                <h1 className="text-2xl font-semibold text-gray-800">{task.titre}</h1>
                 <Link
-                  href={`/tasks/${task._id}/edit`}
+                  href={`/tasks/edit/${task._id}`}
                   className="p-2 text-blue-600 hover:text-blue-900 rounded-full hover:bg-gray-100"
                   title="Edit"
                 >
@@ -92,21 +107,44 @@ const TaskDetailPage = () => {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <p className="text-sm font-medium">{getStatusLabel(task.statut)}</p>
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <div className="flex items-center mb-2">
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(task.statut)}`}>
+                    {getStatusLabel(task.statut)}
+                  </span>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Due Date</p>
-                  <p className="text-sm font-medium">{formatDate(task.due_date)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Created</p>
-                  <p className="text-sm font-medium">{formatDate(task.created_at)}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start">
+                    <FiCalendar className="mt-1 mr-2 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Due Date</p>
+                      <p className="text-sm font-medium">{formatDate(task.due_date)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <FiUser className="mt-1 mr-2 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Assigned To</p>
+                      <p className="text-sm font-medium">{task.assigned_to?.email || 'Not assigned'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <FiCalendar className="mt-1 mr-2 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Created</p>
+                      <p className="text-sm font-medium">{formatDate(task.created_at)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <FiCalendar className="mt-1 mr-2 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Last Updated</p>
+                      <p className="text-sm font-medium">{formatDate(task.updatedAt)}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-
+              
               {task.description && (
                 <div className="mb-6">
                   <h2 className="text-lg font-medium text-gray-800 mb-2">Description</h2>
@@ -115,6 +153,55 @@ const TaskDetailPage = () => {
                   </div>
                 </div>
               )}
+              
+              <div className="mb-6">
+                <h2 className="text-lg font-medium text-gray-800 mb-2">Related Information</h2>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex items-start">
+                      <FiBriefcase className="mt-1 mr-2 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500">Client</p>
+                        <Link 
+                          href={`/clients/${task.interaction_id.lead_id.client_id._id}`}
+                          className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                        >
+                          {task.interaction_id.lead_id.client_id.name}
+                        </Link>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <FiFileText className="mt-1 mr-2 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500">Lead</p>
+                        <Link 
+                          href={`/leads/${task.interaction_id.lead_id._id}`}
+                          className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                        >
+                          {task.interaction_id.lead_id.name}
+                        </Link>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <FiCalendar className="mt-1 mr-2 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500">Interaction</p>
+                        <div className="flex flex-wrap items-center">
+                          <span className="text-sm font-medium">
+                            {task.interaction_id.type_interaction} - {formatDate(task.interaction_id.date_interaction)}
+                          </span>
+                          <Link 
+                            href={`/interactions/${task.interaction_id._id}`}
+                            className="ml-2 text-xs text-indigo-600 hover:text-indigo-800"
+                          >
+                            View Details
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

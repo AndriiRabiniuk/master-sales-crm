@@ -19,24 +19,20 @@ const TasksPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchTasks(currentPage);
-  }, [currentPage, statusFilter, priorityFilter]);
+  }, [currentPage, statusFilter]);
 
   const fetchTasks = async (page: number, search = '') => {
     try {
       setLoading(true);
       const response = await taskService.getAll(page, itemsPerPage, search);
       
-      // Client-side filtering (ideally this would be server-side)
+      // Client-side filtering
       let filteredTasks = response.tasks || [];
       if (statusFilter && statusFilter !== 'all') {
         filteredTasks = filteredTasks.filter(task => task.statut === statusFilter);
-      }
-      if (priorityFilter && priorityFilter !== 'all') {
-        filteredTasks = filteredTasks.filter(task => task.priorite === priorityFilter);
       }
       
       setTasks(filteredTasks);
@@ -84,10 +80,10 @@ const TasksPage = () => {
 
   const handleToggleCompletion = async (task: Task) => {
     try {
-      await taskService.update(task.id, { 
-        statut: task.statut === 'completed' ? 'not_started' : 'completed' 
+      await taskService.update(task._id, { 
+        statut: task.statut === 'completed' ? 'pending' : 'completed' 
       });
-      toast.success(`Task marked as ${task.statut !== 'completed' ? 'completed' : 'not started'}`);
+      toast.success(`Task marked as ${task.statut !== 'completed' ? 'completed' : 'pending'}`);
       fetchTasks(currentPage, isSearching ? searchTerm : '');
     } catch (error) {
       console.error('Error updating task completion:', error);
@@ -107,11 +103,6 @@ const TasksPage = () => {
     setCurrentPage(1);
   };
 
-  const handlePriorityFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPriorityFilter(e.target.value);
-    setCurrentPage(1);
-  };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return '—';
     const date = new Date(dateString);
@@ -122,31 +113,15 @@ const TasksPage = () => {
     }).format(date);
   };
 
-  const getPriorityBadgeColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
-      case 'high':
-      case 'haute':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-      case 'moyenne':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-      case 'basse':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case 'not_started':
-        return 'bg-gray-100 text-gray-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
       case 'in_progress':
         return 'bg-blue-100 text-blue-800';
       case 'completed':
         return 'bg-green-100 text-green-800';
-      case 'delayed':
+      case 'canceled':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -155,14 +130,14 @@ const TasksPage = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'not_started':
-        return 'Not Started';
+      case 'pending':
+        return 'Pending';
       case 'in_progress':
         return 'In Progress';
       case 'completed':
         return 'Completed';
-      case 'delayed':
-        return 'Delayed';
+      case 'canceled':
+        return 'Canceled';
       default:
         return status;
     }
@@ -229,167 +204,152 @@ const TasksPage = () => {
                   className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="all">All</option>
-                  <option value="completed">Completed</option>
-                  <option value="not_started">Not Started</option>
+                  <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
-                  <option value="delayed">Delayed</option>
+                  <option value="completed">Completed</option>
+                  <option value="canceled">Canceled</option>
                 </select>
               </div>
+            </div>
+            
+            <div className="flex justify-end items-center mb-2">
               <div className="flex items-center">
-                <label htmlFor="priorityFilter" className="mr-2 text-sm text-gray-700">Priority:</label>
+                <label htmlFor="itemsPerPage" className="mr-2 text-sm text-gray-700">Show:</label>
                 <select
-                  id="priorityFilter"
-                  value={priorityFilter}
-                  onChange={handlePriorityFilterChange}
+                  id="itemsPerPage"
+                  value={itemsPerPage}
+                  onChange={handleItemsPerPageChange}
                   className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option value="all">All</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
                 </select>
               </div>
             </div>
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center p-12">
-              <LoadingSpinner size="large" color="indigo" />
+            <div className="flex justify-center p-8">
+              <LoadingSpinner />
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="text-center p-8 text-gray-500">
+              {isSearching ? 'No tasks found matching your search criteria.' : 'No tasks found.'}
             </div>
           ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Title
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Due Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Related To
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {tasks.length > 0 ? (
-                      tasks.map((task) => (
-                        <tr key={task.id} className={`hover:bg-gray-50 ${task.statut === 'completed' ? 'bg-gray-50' : ''}`}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <button
-                              onClick={() => handleToggleCompletion(task)}
-                              className={`rounded-full p-1 focus:outline-none ${
-                                task.statut === 'completed' 
-                                  ? 'text-green-600 hover:bg-green-50' 
-                                  : 'text-gray-400 hover:bg-gray-50'
-                              }`}
-                              title={task.statut === 'completed' ? 'Mark as not started' : 'Mark as complete'}
-                            >
-                              {task.statut === 'completed' ? (
-                                <FiCheck className="h-5 w-5" />
-                              ) : (
-                                <FiClock className="h-5 w-5" />
-                              )}
-                            </button>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className={`text-sm font-medium ${task.statut === 'completed' ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Task
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Client / Lead
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Due Date
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Assigned To
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {tasks.map((task) => (
+                    <tr key={task._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-start">
+                          <button 
+                            onClick={() => handleToggleCompletion(task)}
+                            className={`mr-3 flex-shrink-0 h-5 w-5 border rounded ${
+                              task.statut === 'completed' 
+                                ? 'bg-green-500 border-green-500 text-white' 
+                                : 'border-gray-300'
+                            } flex items-center justify-center`}
+                          >
+                            {task.statut === 'completed' && <FiCheck className="h-4 w-4" />}
+                          </button>
+                          <div className="ml-2">
+                            <div className="text-sm font-medium text-gray-900">
                               {task.titre}
                             </div>
                             {task.description && (
-                              <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                              <div className="text-sm text-gray-500 max-w-xs truncate">
                                 {task.description}
                               </div>
                             )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">
-                              {formatDate(task.due_date)}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">
-                              {task.assigned_to ? (
-                                <Link href={`/clients/${task.assigned_to._id}`} className="text-indigo-600 hover:text-indigo-900">
-                                  {task.assigned_to?.email || 'Client'}
-                                </Link>
-                              ) : task.lead_id ? (
-                                <Link href={`/leads/${task.lead_id}`} className="text-indigo-600 hover:text-indigo-900">
-                                  {task.lead?.nom || 'Lead'}
-                                </Link>
-                              ) : (
-                                '—'
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 flex">
-                            <Link
-                              href={`/tasks/${task._id}`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="View Details"
-                            >
-                              <FiEye />
-                            </Link>
-                            <Link
-                              href={`/tasks/edit/${task._id}`}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Edit"
-                            >
-                              <FiEdit />
-                            </Link>
-                            <button
-                              onClick={() => handleDelete(task._id)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete"
-                            >
-                              <FiTrash2 />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                          {isSearching ? 'No tasks found matching your search.' : 'No tasks available.'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {totalPages > 1 && (
-                <div className="px-6 py-4 flex items-center justify-between border-t">
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-700 mr-2">Items per page:</span>
-                    <select
-                      value={itemsPerPage}
-                      onChange={handleItemsPerPageChange}
-                      className="border rounded px-2 py-1 text-sm"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    totalItems={totalItems}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
-            </>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {task.interaction_id.lead_id.client_id.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {task.interaction_id.lead_id.name}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {formatDate(task.due_date)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(task.statut)}`}>
+                          {getStatusLabel(task.statut)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {task.assigned_to?.email || '—'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <Link 
+                            href={`/tasks/${task._id}`}
+                            className="text-indigo-600 hover:text-indigo-900"
+                          >
+                            <FiEye className="h-5 w-5" />
+                          </Link>
+                          <Link 
+                            href={`/tasks/edit/${task._id}`}
+                            className="text-amber-600 hover:text-amber-900"
+                          >
+                            <FiEdit className="h-5 w-5" />
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(task._id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <FiTrash2 className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          
+          {!loading && tasks.length > 0 && (
+            <div className="px-6 py-4 border-t border-gray-200">
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+              />
+            </div>
           )}
         </div>
       </div>

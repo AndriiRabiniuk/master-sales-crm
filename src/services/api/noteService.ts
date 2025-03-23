@@ -2,20 +2,24 @@ import { api, API_URL } from './index';
 
 export interface Note {
   _id: string;
-  client_id: string;
-  user_id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  updated_at?: string;
-  user?: {
+  client_id: {
     _id: string;
+    company_id: {
+      _id: string;
+      name: string;
+    };
     name: string;
   };
-  client?: {
-    _id: string;
-    nom: string;
-  };
+  contenu: string;
+  created_at: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface CreateNoteRequest {
+  client_id: string;
+  contenu: string;
 }
 
 export interface NotesResponse {
@@ -61,7 +65,7 @@ const noteService = {
     }
   },
 
-  create: async (noteData: Omit<Note, '_id' | 'created_at' | 'updated_at'>): Promise<Note> => {
+  create: async (noteData: CreateNoteRequest): Promise<Note> => {
     try {
       const response = await api.post<Note>(`${API_URL}/notes`, noteData);
       return response.data;
@@ -71,7 +75,7 @@ const noteService = {
     }
   },
 
-  update: async (id: string, noteData: Partial<Omit<Note, '_id' | 'created_at' | 'updated_at'>>): Promise<Note> => {
+  update: async (id: string, noteData: Partial<CreateNoteRequest>): Promise<Note> => {
     try {
       const response = await api.put<Note>(`${API_URL}/notes/${id}`, noteData);
       return response.data;

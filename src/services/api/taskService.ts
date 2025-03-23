@@ -2,24 +2,41 @@ import { api, API_URL } from './index';
 
 export interface Task {
   _id: string;
-  title: string;
+  titre: string;
   description?: string;
+  statut: 'pending' | 'in_progress' | 'completed' | 'canceled';
   due_date?: string;
-  statut: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  priorite: 'low' | 'medium' | 'high';
-  interaction_id: string;
-  user_id: string;
-  interaction?: {
+  interaction_id: {
     _id: string;
-    title: string;
-    lead_id: string;
+    lead_id: {
+      _id: string;
+      client_id: {
+        _id: string;
+        name: string;
+      };
+      name: string;
+    };
+    date_interaction: string;
+    type_interaction: string;
   };
-  user?: {
+  assigned_to: {
     _id: string;
-    name: string;
+    email: string;
   };
   created_at: string;
-  updated_at?: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+// Type for creating a new task
+export interface CreateTaskRequest {
+  titre: string;
+  description?: string;
+  statut: 'pending' | 'in_progress' | 'completed' | 'canceled';
+  due_date?: string;
+  interaction_id: string;
+  assigned_to?: string;
 }
 
 export interface TasksResponse {
@@ -77,7 +94,7 @@ const taskService = {
     }
   },
 
-  create: async (taskData: Omit<Task, '_id' | 'created_at' | 'updated_at'>): Promise<Task> => {
+  create: async (taskData: CreateTaskRequest): Promise<Task> => {
     try {
       const response = await api.post<Task>(`${API_URL}/tasks`, taskData);
       return response.data;
@@ -87,7 +104,7 @@ const taskService = {
     }
   },
 
-  update: async (id: string, taskData: Partial<Omit<Task, '_id' | 'created_at' | 'updated_at'>>): Promise<Task> => {
+  update: async (id: string, taskData: Partial<CreateTaskRequest>): Promise<Task> => {
     try {
       const response = await api.put<Task>(`${API_URL}/tasks/${id}`, taskData);
       return response.data;
