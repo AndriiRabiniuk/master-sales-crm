@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { FiEdit, FiArrowLeft, FiPhone, FiMail, FiFileText, FiCalendar, FiList, FiCheckSquare } from 'react-icons/fi';
+import { FiEdit, FiArrowLeft, FiPhone, FiMail, FiFileText, FiCalendar, FiList, FiPlus } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import leadService from '@/services/api/leadService';
-import clientService from '@/services/api/clientService';
 
 const LeadDetailPage = () => {
   const router = useRouter();
@@ -14,7 +13,6 @@ const LeadDetailPage = () => {
   const leadId = id as string;
   
   const [lead, setLead] = useState<any>(null);
-  const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,11 +26,6 @@ const LeadDetailPage = () => {
       setLoading(true);
       const leadData = await leadService.getById(leadId);
       setLead(leadData);
-      
-      if (leadData.client_id) {
-        const clientData = await clientService.getById(leadData.client_id);
-        setClient(clientData);
-      }
     } catch (error) {
       console.error('Error fetching lead details:', error);
       toast.error('Failed to load lead details');
@@ -60,6 +53,19 @@ const LeadDetailPage = () => {
         return 'bg-indigo-100 text-indigo-800';
       case 'lost':
         return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getInteractionTypeColor = (type: string) => {
+    switch (type) {
+      case 'email':
+        return 'bg-blue-100 text-blue-800';
+      case 'call':
+        return 'bg-green-100 text-green-800';
+      case 'meeting':
+        return 'bg-purple-100 text-purple-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -164,17 +170,22 @@ const LeadDetailPage = () => {
             <div className="bg-white rounded-lg shadow mb-6">
               <div className="p-6">
                 <h2 className="text-xl font-semibold mb-4">Associated Client</h2>
-                {client ? (
+                {lead.client_id ? (
                   <div>
-                    <p className="font-medium text-gray-800 mb-2">{client.nom}</p>
-                    {client.SIREN && <p className="text-sm text-gray-600 mb-1">SIREN: {client.SIREN}</p>}
-                    {client.code_postal && <p className="text-sm text-gray-600 mb-1">Postal Code: {client.code_postal}</p>}
-                    <Link 
-                      href={`/clients/${client._id}`} 
-                      className="text-indigo-600 hover:text-indigo-800 text-sm font-medium mt-2 inline-block"
-                    >
-                      View Client Details
-                    </Link>
+                    <p className="font-medium text-gray-800 mb-2">{typeof lead.client_id === 'object' ? lead.client_id.name : 'Client ID: ' + lead.client_id}</p>
+                    {typeof lead.client_id === 'object' && lead.client_id.SIREN && <p className="text-sm text-gray-600 mb-1">SIREN: {lead.client_id.SIREN}</p>}
+                    {typeof lead.client_id === 'object' && lead.client_id.SIRET && <p className="text-sm text-gray-600 mb-1">SIRET: {lead.client_id.SIRET}</p>}
+                    {typeof lead.client_id === 'object' && lead.client_id.company_id && (
+                      <p className="text-sm text-gray-600 mb-1">Company: {lead.client_id.company_id.name}</p>
+                    )}
+                    {typeof lead.client_id === 'object' && lead.client_id._id && (
+                      <Link 
+                        href={`/clients/${lead.client_id._id}`} 
+                        className="text-indigo-600 hover:text-indigo-800 text-sm font-medium mt-2 inline-block"
+                      >
+                        View Client Details
+                      </Link>
+                    )}
                   </div>
                 ) : (
                   <p className="text-gray-600">No client associated with this lead</p>
@@ -184,66 +195,90 @@ const LeadDetailPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center">
-                <FiList className="mr-2" /> Interactions
-              </h2>
-              <Link
-                href={`/leads/${lead._id}/interactions`}
-                className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-              >
-                View All
-              </Link>
-            </div>
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center">
+              <FiList className="mr-2" /> Interactions
+            </h2>
+          </div>
+          
+          <div className="mb-4">
             <Link
               href={`/leads/${lead._id}/interactions/add`}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center block"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center inline-flex items-center"
             >
-              Add Interaction
+              <FiPlus className="mr-2" /> Add Interaction
             </Link>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center">
-                <FiFileText className="mr-2" /> Notes
-              </h2>
+          {!lead.interactions || lead.interactions.length === 0 ? (
+            <div className="text-center p-8 bg-gray-50 rounded-lg">
+              <p className="text-gray-500 mb-4">No interactions recorded for this lead yet.</p>
               <Link
-                href={`/leads/${lead._id}/notes`}
-                className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                href={`/leads/${lead._id}/interactions/add`}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded inline-flex items-center"
               >
-                View All
+                <FiPlus className="mr-2" /> Record your first interaction
               </Link>
             </div>
-            <Link
-              href={`/leads/${lead._id}/notes/add`}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center block"
-            >
-              Add Note
-            </Link>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center">
-                <FiCheckSquare className="mr-2" /> Tasks
-              </h2>
-              <Link
-                href={`/leads/${lead._id}/tasks`}
-                className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-              >
-                View All
-              </Link>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {lead.interactions.map((interaction: any) => (
+                    <tr key={interaction._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getInteractionTypeColor(
+                            interaction.type_interaction
+                          )}`}
+                        >
+                          {interaction.type_interaction}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {interaction.description || 'No description'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {formatDate(interaction.date_interaction || interaction.created_at)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
+                          <Link
+                            href={`/interactions/${interaction._id}/edit`}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Edit interaction"
+                          >
+                            <FiEdit />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <Link
-              href={`/leads/${lead._id}/tasks/add`}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center block"
-            >
-              Add Task
-            </Link>
-          </div>
+          )}
         </div>
       </div>
     </MainLayout>
