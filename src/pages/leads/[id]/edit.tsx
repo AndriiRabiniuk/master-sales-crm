@@ -166,14 +166,14 @@ const EditLeadPage = () => {
                 </label>
                 <select
                   id="client"
-                  value={clientId}
+                  value={clientId._id}
                   onChange={(e) => setClientId(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">Select a client (optional)</option>
                   {clients.map((client) => (
                     <option key={client._id} value={client._id}>
-                      {client.nom}
+                      {client.name}
                     </option>
                   ))}
                 </select>
