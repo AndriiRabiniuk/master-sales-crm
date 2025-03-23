@@ -98,10 +98,6 @@ const TaskDetailPage = () => {
                   <p className="text-sm font-medium">{getStatusLabel(task.statut)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Priority</p>
-                  <p className="text-sm font-medium">{task.priorite.charAt(0).toUpperCase() + task.priorite.slice(1)}</p>
-                </div>
-                <div>
                   <p className="text-sm text-gray-500">Due Date</p>
                   <p className="text-sm font-medium">{formatDate(task.due_date)}</p>
                 </div>
