@@ -51,10 +51,6 @@ const AddUserPage = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    // Company ID is required for all roles except SUPER_ADMIN
-    if (role !== UserRole.SUPER_ADMIN && !companyId.trim()) {
-      newErrors.companyId = 'Company ID is required for this role';
-    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -75,7 +71,6 @@ const AddUserPage = () => {
         email,
         password,
         role,
-        ...(role !== UserRole.SUPER_ADMIN && companyId ? { company_id: companyId } : {})
       };
       
       await userService.create(userData);
@@ -208,26 +203,7 @@ const AddUserPage = () => {
               </div>
 
               {/* Company ID (only for roles other than SUPER_ADMIN) */}
-              {role !== UserRole.SUPER_ADMIN && (
-                <div>
-                  <label htmlFor="companyId" className="block text-sm font-medium text-gray-700 mb-1">
-                    Company ID <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="companyId"
-                    value={companyId}
-                    onChange={(e) => setCompanyId(e.target.value)}
-                    className={`block w-full sm:text-sm rounded-md shadow-sm ${
-                      errors.companyId 
-                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
-                        : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
-                    }`}
-                    placeholder="Enter company ID"
-                  />
-                  {errors.companyId && <p className="mt-1 text-sm text-red-600">{errors.companyId}</p>}
-                </div>
-              )}
+              
             </div>
 
             {/* Action buttons */}
