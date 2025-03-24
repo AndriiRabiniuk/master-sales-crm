@@ -10,6 +10,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { clientService, leadService, taskService } from '../services/api';
 import { useRouter } from "next/navigation"; 
+import ClientMap from '@/components/map/ClientMap';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -53,8 +54,8 @@ const Dashboard = () => {
         setLoading(true);
 
         // Fetch clients
-        const clientsResponse = await clientService.getAll(1, 10, '');
-        setClients(clientsResponse.clients || [ ]);
+        const clientsResponse = await clientService.getAll(1, 100);
+        setClients(clientsResponse.clients || []);
         
         // Fetch leads
         const leads = await leadService.getAll();
@@ -344,18 +345,7 @@ const Dashboard = () => {
       </div>
 
       {/* Client Map */}
-      <div className="mt-8 bg-white shadow rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <FiMapPin className="h-6 w-6 text-indigo-600 mr-2" />
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Client Locations</h3>
-          </div>
-          <div className="text-sm text-gray-500">
-            {clients.filter(c => c.latitude && c.longitude).length} clients on map
-          </div>
-        </div>
-        <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
-      </div>
+      <ClientMap clients={clients} />
 
       {/* Charts */}
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
