@@ -10,6 +10,7 @@ import Pagination from '@/components/common/Pagination';
 
 const LeadsPage = () => {
   const router = useRouter();
+  const { client_id } = router.query;
   const [loading, setLoading] = useState(true);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [pagination, setPagination] = useState({
@@ -31,7 +32,8 @@ const LeadsPage = () => {
       const response: LeadsResponse = await leadService.getAll(
         pagination.currentPage,
         pagination.limit,
-        searchTerm
+        searchTerm,
+        client_id
       );
       
       // Filter by status if needed

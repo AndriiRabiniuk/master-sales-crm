@@ -9,6 +9,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { clientService, leadService, taskService } from '../services/api';
+import { useRouter } from "next/navigation"; 
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -17,6 +18,7 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
 const Dashboard = () => {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -52,7 +54,7 @@ const Dashboard = () => {
 
         // Fetch clients
         const clientsResponse = await clientService.getAll(1, 10, '');
-        setClients(clientsResponse.data || []);
+        setClients(clientsResponse.clients || [ ]);
         
         // Fetch leads
         const leads = await leadService.getAll();
@@ -138,24 +140,32 @@ const Dashboard = () => {
     clients.forEach((client) => {
       if (client.latitude && client.longitude) {
         const el = document.createElement('div');
-        el.className = 'marker';
-        el.style.width = '20px';
-        el.style.height = '20px';
-        el.style.backgroundColor = '#4F46E5';
-        el.style.borderRadius = '50%';
-        el.style.border = '2px solid white';
-        el.style.boxShadow = '0 0 0 2px #4F46E5';
+        el.className = "marker";
+        el.style.width = "20px";
+        el.style.height = "20px";
+        el.style.backgroundColor = "#4F46E5";
+        el.style.borderRadius = "50%";
+        el.style.border = "2px solid white";
+        el.style.boxShadow = "0 0 0 2px #4F46E5";
+
+        // Create popup container
+        const popupContent = document.createElement("div");
+        popupContent.innerHTML = `
+          <div class="p-2">
+            <h3 class="font-semibold">${client.name}</h3>
+            <button id="viewClient" class="text-blue-500 underline">View Client leads</button>
+          </div>
+        `;
+
+        // Attach event listener for navigation
+        popupContent.querySelector("#viewClient")?.addEventListener("click", () => {
+          router.push(`/leads?client_id=${client._id}`);
+        });
 
         new mapboxgl.Marker(el)
           .setLngLat([parseFloat(client.longitude), parseFloat(client.latitude)])
           .setPopup(
-            new mapboxgl.Popup({ offset: 25 })
-              .setHTML(`
-                <div class="p-2">
-                  <h3 class="font-semibold">${client.name}</h3>
-                
-                </div>
-              `)
+            new mapboxgl.Popup({ offset: 25 }).setDOMContent(popupContent) // ✅ Use setDOMContent
           )
           .addTo(map.current!);
       }
