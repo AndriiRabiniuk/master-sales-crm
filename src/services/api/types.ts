@@ -14,11 +14,11 @@ export enum LeadSource {
 }
 
 export enum LeadStatus {
-  START_TO_CALL = 'start-to-call',
-  CALL_TO_CONNECT = 'call-to-connect',
-  CONNECT_TO_CONTACT = 'connect-to-contact',
-  CONTACT_TO_DEMO = 'contact-to-demo',
-  DEMO_TO_CLOSE = 'demo-to-close'
+  START_TO_CALL = 'Start-to-Call',
+  CALL_TO_CONNECT = 'Call-to-Connect',
+  CONNECT_TO_CONTACT = 'Connect-to-Contact',
+  CONTACT_TO_DEMO = 'Contact-to-Demo',
+  DEMO_TO_CLOSE = 'Demo-to-Close'
 }
 
 export enum InteractionType {
