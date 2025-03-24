@@ -18,7 +18,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
-    {name:'Users', href:'/users', icon:FiUser},
+    ...(user?.role === 'admin' ? [{ name: 'Users', href: '/users', icon: FiUser }] : []),
     { name: 'Clients', href: '/clients', icon: FiBriefcase },
     { name: 'Contacts', href: '/contacts', icon: FiUsers },
     { name: 'Leads', href: '/leads', icon: FiFileText },
@@ -94,7 +94,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-base font-medium text-white">{user?.username || 'User'}</p>
+                <p className="text-base font-medium text-white">{user ? `${user.name}` : 'User'}</p>
                 <p className="text-sm font-medium text-indigo-200">{user?.email || 'user@example.com'}</p>
               </div>
             </div>
@@ -141,7 +141,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-white">{user?.username || 'User'}</p>
+                  <p className="text-sm font-medium text-white">{user ? `${user.name}` : 'User'}</p>
                   <p className="text-xs font-medium text-indigo-200">{user?.email || 'user@example.com'}</p>
                 </div>
               </div>
