@@ -108,14 +108,12 @@ const TaskDetailPage = () => {
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case 'not_started':
+      case 'pending':
         return 'bg-gray-200 text-gray-800';
-      case 'in_progress':
+      case 'in progress':
         return 'bg-blue-200 text-blue-800';
       case 'completed':
         return 'bg-green-200 text-green-800';
-      case 'delayed':
-        return 'bg-yellow-200 text-yellow-800';
       default:
         return 'bg-gray-200 text-gray-800';
     }
@@ -136,14 +134,12 @@ const TaskDetailPage = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'not_started':
+      case 'pending':
         return 'Not Started';
-      case 'in_progress':
+      case 'in progress':
         return 'In Progress';
       case 'completed':
         return 'Completed';
-      case 'delayed':
-        return 'Delayed';
       default:
         return status;
     }

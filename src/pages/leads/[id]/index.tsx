@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { FiEdit, FiArrowLeft, FiPhone, FiMail, FiFileText, FiCalendar, FiList, FiPlus, FiUser } from 'react-icons/fi';
+import { FiEdit, FiArrowLeft, FiPhone, FiMail, FiFileText, FiCalendar, FiList, FiPlus, FiUser, FiTrash2 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import leadService, { Lead, Task } from '@/services/api/leadService';
 import userService from '@/services/api/userService';
+import taskService from '@/services/api/taskService';
 
 const LeadDetailPage = () => {
   const router = useRouter();
@@ -18,6 +19,8 @@ const LeadDetailPage = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [showDeleteTaskModal, setShowDeleteTaskModal] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   useEffect(() => {
     if (leadId) {
@@ -67,6 +70,20 @@ const LeadDetailPage = () => {
     } catch (error) {
       console.error('Error assigning lead:', error);
       toast.error('Failed to assign lead');
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!taskToDelete) return;
+
+    try {
+      await taskService.delete(taskToDelete._id);
+      toast.success('Task deleted successfully');
+      setShowDeleteTaskModal(false);
+      fetchLeadData(); // Refresh lead data to update tasks list
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Failed to delete task');
     }
   };
 
@@ -354,11 +371,23 @@ const LeadDetailPage = () => {
             <h2 className="text-xl font-semibold flex items-center">
               <FiList className="mr-2" /> Tasks
             </h2>
+            <Link
+              href={`/tasks/add?lead_id=${lead._id}`}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center inline-flex items-center"
+            >
+              <FiPlus className="mr-2" /> Add Task
+            </Link>
           </div>
           
           {!lead.tasks || lead.tasks.length === 0 ? (
             <div className="text-center p-8 bg-gray-50 rounded-lg">
               <p className="text-gray-500 mb-4">No tasks assigned for this lead yet.</p>
+              <Link
+                href={`/tasks/add?lead_id=${lead._id}`}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded inline-flex items-center"
+              >
+                <FiPlus className="mr-2" /> Create your first task
+              </Link>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -379,6 +408,9 @@ const LeadDetailPage = () => {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Assigned To
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -418,6 +450,27 @@ const LeadDetailPage = () => {
                           {task.assigned_to.name}
                         </div>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
+                          <Link
+                            href={`/tasks/${task._id}/edit`}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Edit task"
+                          >
+                            <FiEdit />
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setTaskToDelete(task);
+                              setShowDeleteTaskModal(true);
+                            }}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete task"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -425,6 +478,36 @@ const LeadDetailPage = () => {
             </div>
           )}
         </div>
+
+        {/* Delete Task Modal */}
+        {showDeleteTaskModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                  Delete Task
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Are you sure you want to delete this task? This action cannot be undone.
+                </p>
+                <div className="mt-4 flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowDeleteTaskModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteTask}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Assign Lead Modal */}
         {showAssignModal && (

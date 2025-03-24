@@ -238,10 +238,9 @@ const EditTaskPage = () => {
                     onChange={(e) => setStatus(e.target.value as Task['statut'])}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
-                    <option value="not_started">Not Started</option>
-                    <option value="in_progress">In Progress</option>
+                    <option value="pending">pending</option>
+                    <option value="in progress">In Progress</option>
                     <option value="completed">Completed</option>
-                    <option value="delayed">Delayed</option>
                   </select>
                 </div>
 

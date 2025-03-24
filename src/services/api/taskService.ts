@@ -4,7 +4,7 @@ export interface Task {
   _id: string;
   titre: string;
   description?: string;
-  statut: 'pending' | 'in_progress' | 'completed' | 'canceled';
+  statut: 'pending' | 'in progress' | 'completed';
   due_date?: string;
   interaction_id: {
     _id: string;
@@ -33,7 +33,7 @@ export interface Task {
 export interface CreateTaskRequest {
   titre: string;
   description?: string;
-  statut: 'pending' | 'in_progress' | 'completed' | 'canceled';
+  statut: 'pending' | 'in progress' | 'completed';
   due_date?: string;
   interaction_id: string;
   assigned_to?: string;

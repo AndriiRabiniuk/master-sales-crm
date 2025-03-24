@@ -283,16 +283,10 @@ const UsersPage = () => {
 // Helper function to format role labels for display
 const formatRoleLabel = (role: UserRole): string => {
   switch (role) {
-    case UserRole.SUPER_ADMIN:
-      return 'Super Admin';
     case UserRole.ADMIN:
       return 'Admin';
-    case UserRole.MANAGER:
-      return 'Manager';
     case UserRole.SALES:
       return 'Sales';
-    case UserRole.SUPPORT:
-      return 'Support';
     default:
       return role;
   }

@@ -1,10 +1,7 @@
 // Enums
 export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
   ADMIN = 'admin',
-  MANAGER = 'manager',
   SALES = 'sales',
-  SUPPORT = 'support'
 }
 
 export enum LeadSource {

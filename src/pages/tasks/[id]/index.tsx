@@ -47,7 +47,7 @@ const TaskDetailPage = () => {
     switch (status) {
       case 'pending':
         return 'Pending';
-      case 'in_progress':
+      case 'in progress':
         return 'In Progress';
       case 'completed':
         return 'Completed';
@@ -62,7 +62,7 @@ const TaskDetailPage = () => {
     switch (status) {
       case 'pending':
         return 'text-yellow-600';
-      case 'in_progress':
+      case 'in progress':
         return 'text-blue-600';
       case 'completed':
         return 'text-green-600';

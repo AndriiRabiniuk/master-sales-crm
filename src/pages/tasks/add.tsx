@@ -11,6 +11,7 @@ import interactionService from '@/services/api/interactionService';
 
 const AddTaskPage = () => {
   const router = useRouter();
+  const { lead_id } = router.query;
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [title, setTitle] = useState('');
@@ -26,7 +27,7 @@ const AddTaskPage = () => {
   useEffect(() => {
     Promise.all([fetchUsers(), fetchInteractions()])
       .finally(() => setLoading(false));
-  }, []);
+  }, [lead_id]);
 
   const fetchUsers = async () => {
     try {
@@ -42,8 +43,12 @@ const AddTaskPage = () => {
 
   const fetchInteractions = async () => {
     try {
-      const response = await interactionService.getAll(1,500);
-      setInteractions(response.interactions || []);
+      const response = await interactionService.getAll(1, 500);
+      // Filter interactions by lead_id if it exists
+      const filteredInteractions = lead_id 
+        ? response.interactions.filter((interaction: any) => interaction.lead_id._id === lead_id)
+        : response.interactions;
+      setInteractions(filteredInteractions || []);
       return response;
     } catch (error) {
       console.error('Error fetching interactions:', error);
@@ -75,12 +80,17 @@ const AddTaskPage = () => {
         statut: status,
         priorite: priority,
         interaction_id: interactionId,
-        assigned_to: userId || ''
+        assigned_to: userId || undefined
       };
       
       const newTask = await taskService.create(taskData);
       toast.success('Task created successfully');
-      router.push(`/tasks/${newTask._id}`);
+      // If we came from a lead page, go back there
+      if (lead_id) {
+        router.push(`/leads/${lead_id}`);
+      } else {
+        router.push(`/tasks/${newTask._id}`);
+      }
     } catch (error) {
       console.error('Error creating task:', error);
       toast.error('Failed to create task');
@@ -94,10 +104,10 @@ const AddTaskPage = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <Link
-            href="/tasks"
+            href={lead_id ? `/leads/${lead_id}` : "/tasks"}
             className="inline-flex items-center text-indigo-600 hover:text-indigo-900"
           >
-            <FiArrowLeft className="mr-2" /> Back to Tasks
+            <FiArrowLeft className="mr-2" /> Back to {lead_id ? 'Lead' : 'Tasks'}
           </Link>
         </div>
 
@@ -206,17 +216,32 @@ const AddTaskPage = () => {
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     >
+                      <option value="pending">Pending</option>
                       <option value="in progress">In Progress</option>
                       <option value="completed">Completed</option>
-                      <option value="pending">pending</option>
                     </select>
                   </div>
 
+                  <div>
+                    <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
+                      Priority
+                    </label>
+                    <select
+                      id="priority"
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value as Task['priorite'])}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-3">
                   <Link
-                    href="/tasks"
+                    href={lead_id ? `/leads/${lead_id}` : "/tasks"}
                     className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Cancel
