@@ -2,18 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-toastify';
-import { FiUsers, FiFileText, FiCalendar, FiCheckCircle } from 'react-icons/fi';
+import { FiUsers, FiFileText, FiCalendar, FiCheckCircle, FiMapPin } from 'react-icons/fi';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { clientService, leadService, taskService } from '../services/api';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
+// Initialize Mapbox
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
   const [stats, setStats] = useState({
     clientCount: 0,
     leadCount: 0,
@@ -21,13 +28,14 @@ const Dashboard = () => {
     completedTasks: 0,
   });
   const [leadsByStatus, setLeadsByStatus] = useState({
-    new: 0,
-    contacted: 0,
-    negotiation: 0,
-    won: 0,
-    lost: 0,
+    'Start-to-Call': 0,
+    'Call-to-Connect': 0,
+    'Connect-to-Contact': 0,
+    'Contact-to-Demo': 0,
+    'Demo-to-Close': 0,
   });
   const [recentTasks, setRecentTasks] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const effectRan = useRef(false);
 
   useEffect(() => {
@@ -43,18 +51,19 @@ const Dashboard = () => {
         setLoading(true);
 
         // Fetch clients
-        const clients = await clientService.getAll();
+        const clientsResponse = await clientService.getAll(1, 10, '');
+        setClients(clientsResponse.data || []);
         
         // Fetch leads
         const leads = await leadService.getAll();
         
         // Count leads by status
         const leadStatusCounts = {
-          new: 0,
-          contacted: 0,
-          negotiation: 0,
-          won: 0,
-          lost: 0,
+          'Start-to-Call': 0,
+          'Call-to-Connect': 0,
+          'Connect-to-Contact': 0,
+          'Contact-to-Demo': 0,
+          'Demo-to-Close': 0,
         };
         
         leads.leads.forEach((lead: any) => {
@@ -68,7 +77,7 @@ const Dashboard = () => {
         const completedTasksCount = tasks.tasks.filter((task: any) => task.statut === 'completed').length;
         
         setStats({
-          clientCount: clients.total|| 0,
+          clientCount: clientsResponse.total || 0,
           leadCount: leads.total || 0,
           taskCount: tasks.total || 0,
           completedTasks: completedTasksCount || 0,
@@ -90,32 +99,106 @@ const Dashboard = () => {
     }
   }, [authLoading]);
 
+  // Initialize map
+  useEffect(() => {
+    if (map.current) return;
+    if (!mapContainer.current) return;
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [-7.9811, 31.6295], // Tunisia coordinates
+      zoom: 6,
+      attributionControl: false
+    });
+
+    // Add navigation controls
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    // Cleanup
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, []);
+
+  // Add markers when clients data is available
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Remove existing markers
+    const markers = document.getElementsByClassName('mapboxgl-marker');
+    while (markers[0]) {
+      markers[0].remove();
+    }
+
+    // Add new markers
+    clients.forEach((client) => {
+      if (client.latitude && client.longitude) {
+        const el = document.createElement('div');
+        el.className = 'marker';
+        el.style.width = '20px';
+        el.style.height = '20px';
+        el.style.backgroundColor = '#4F46E5';
+        el.style.borderRadius = '50%';
+        el.style.border = '2px solid white';
+        el.style.boxShadow = '0 0 0 2px #4F46E5';
+
+        new mapboxgl.Marker(el)
+          .setLngLat([parseFloat(client.longitude), parseFloat(client.latitude)])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 })
+              .setHTML(`
+                <div class="p-2">
+                  <h3 class="font-semibold">${client.name}</h3>
+                
+                </div>
+              `)
+          )
+          .addTo(map.current!);
+      }
+    });
+
+    // Fit bounds to show all markers
+    if (clients.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      clients.forEach((client) => {
+        if (client.latitude && client.longitude) {
+          bounds.extend([parseFloat(client.longitude), parseFloat(client.latitude)]);
+        }
+      });
+      map.current.fitBounds(bounds, { padding: 50 });
+    }
+  }, [clients]);
+
   // Chart data for lead statuses
   const leadStatusData = {
-    labels: ['New', 'Contacted', 'Negotiation', 'Won', 'Lost'],
+    labels: ['Start-to-Call', 'Call-to-Connect', 'Connect-to-Contact', 'Contact-to-Demo', 'Demo-to-Close'],
     datasets: [
       {
         label: 'Leads by Status',
         data: [
-          leadsByStatus.new,
-          leadsByStatus.contacted,
-          leadsByStatus.negotiation,
-          leadsByStatus.won,
-          leadsByStatus.lost,
+          leadsByStatus['Start-to-Call'],
+          leadsByStatus['Call-to-Connect'],
+          leadsByStatus['Connect-to-Contact'],
+          leadsByStatus['Contact-to-Demo'],
+          leadsByStatus['Demo-to-Close'],
         ],
         backgroundColor: [
-          'rgba(54, 162, 235, 0.5)',
-          'rgba(255, 206, 86, 0.5)',
-          'rgba(75, 192, 192, 0.5)',
-          'rgba(153, 102, 255, 0.5)',
-          'rgba(255, 99, 132, 0.5)',
+          'rgba(59, 130, 246, 0.5)', // blue-500
+          'rgba(234, 179, 8, 0.5)',  // yellow-500
+          'rgba(34, 197, 94, 0.5)',  // green-500
+          'rgba(139, 92, 246, 0.5)', // purple-500
+          'rgba(99, 102, 241, 0.5)', // indigo-500
         ],
         borderColor: [
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(255, 99, 132, 1)',
+          'rgba(59, 130, 246, 1)', // blue-500
+          'rgba(234, 179, 8, 1)',  // yellow-500
+          'rgba(34, 197, 94, 1)',  // green-500
+          'rgba(139, 92, 246, 1)', // purple-500
+          'rgba(99, 102, 241, 1)', // indigo-500
         ],
         borderWidth: 1,
       },
@@ -248,6 +331,20 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Client Map */}
+      <div className="mt-8 bg-white shadow rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <FiMapPin className="h-6 w-6 text-indigo-600 mr-2" />
+            <h3 className="text-lg leading-6 font-medium text-gray-900">Client Locations</h3>
+          </div>
+          <div className="text-sm text-gray-500">
+            {clients.filter(c => c.latitude && c.longitude).length} clients on map
+          </div>
+        </div>
+        <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
       </div>
 
       {/* Charts */}
