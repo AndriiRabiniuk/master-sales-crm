@@ -7,35 +7,49 @@ import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import leadService from '@/services/api/leadService';
 import clientService from '@/services/api/clientService';
+import { LeadSource, LeadStatus } from '@/services/api/types';
+import userService from '@/services/api/userService';
 
 const AddLeadPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   
   // Form state
   const [name, setName] = useState('');
   const [clientId, setClientId] = useState('');
-  const [source, setSource] = useState('');
-  const [status, setStatus] = useState('new');
+  const [source, setSource] = useState<LeadSource | ''>('');
+  const [status, setStatus] = useState<LeadStatus>(LeadStatus.START_TO_CALL);
   const [estimatedValue, setEstimatedValue] = useState('');
   const [description, setDescription] = useState('');
+  const [userId, setUserId] = useState('');
 
   useEffect(() => {
-    fetchClients();
+    Promise.all([
+      fetchClients(),
+      fetchUsers()
+    ]);
   }, []);
 
   const fetchClients = async () => {
     try {
-      setLoading(true);
       const response = await clientService.getAll();
       setClients(response.clients || []);
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast.error('Failed to load clients');
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await userService.getAll();
+      setUsers(response.users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
     }
   };
 
@@ -53,18 +67,19 @@ const AddLeadPage = () => {
       const leadData = {
         name,
         client_id: clientId || undefined,
-        source: source || undefined,
+        source: source as LeadSource,
         statut: status,
         valeur_estimee: estimatedValue ? parseFloat(estimatedValue) : undefined,
         description: description || undefined
       };
 
-      const result = await leadService.create(leadData);
+      await leadService.create(leadData);
       toast.success('Lead created successfully');
-      router.push(`/leads/${result._id}`);
+      router.push('/leads');
     } catch (error) {
       console.error('Error creating lead:', error);
       toast.error('Failed to create lead');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -127,14 +142,15 @@ const AddLeadPage = () => {
                     Source
                   </label>
                   <select
-                    id="status"
-                    value={status}
-                    onChange={(e) => setSource(e.target.value)}
+                    id="source"
+                    value={source}
+                    onChange={(e) => setSource(e.target.value as LeadSource)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
-                    <option value="website">Website</option>
-                    <option value="referral">Referral</option>
-                    <option value="event">Event</option>
+                    <option value="">Select a source</option>
+                    <option value={LeadSource.WEBSITE}>Website</option>
+                    <option value={LeadSource.REFERRAL}>Referral</option>
+                    <option value={LeadSource.EVENT}>Event</option>
                   </select>
                 </div>
 
@@ -145,13 +161,14 @@ const AddLeadPage = () => {
                   <select
                     id="status"
                     value={status}
-                    onChange={(e) => setStatus(e.target.value)}
+                    onChange={(e) => setStatus(e.target.value as LeadStatus)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
-                    <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="won">Won</option>
-                    <option value="lost">Lost</option>
+                    <option value={LeadStatus.START_TO_CALL}>Start to Call</option>
+                    <option value={LeadStatus.CALL_TO_CONNECT}>Call to Connect</option>
+                    <option value={LeadStatus.CONNECT_TO_CONTACT}>Connect to Contact</option>
+                    <option value={LeadStatus.CONTACT_TO_DEMO}>Contact to Demo</option>
+                    <option value={LeadStatus.DEMO_TO_CLOSE}>Demo to Close</option>
                   </select>
                 </div>
 
@@ -169,6 +186,25 @@ const AddLeadPage = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="userId" className="block text-sm font-medium text-gray-700 mb-1">
+                  Assigned User
+                </label>
+                <select
+                  id="userId"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">Select a user</option>
+                  {users.map((user) => (
+                    <option key={user._id} value={user._id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="mb-6">

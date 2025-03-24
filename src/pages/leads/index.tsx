@@ -28,24 +28,24 @@ const LeadsPage = () => {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const data: LeadsResponse = await leadService.getAll(
+      const response: LeadsResponse = await leadService.getAll(
         pagination.currentPage,
         pagination.limit,
         searchTerm
       );
       
       // Filter by status if needed
-      let filteredLeads = data.leads;
+      let filteredLeads = response.leads;
       if (filterStatus) {
         filteredLeads = filteredLeads.filter((lead) => lead.statut === filterStatus);
       }
       
       setLeads(filteredLeads);
       setPagination({
-        totalPages: data.totalPages,
-        currentPage: data.page,
-        limit: data.limit,
-        total: data.total,
+        totalPages: response.totalPages,
+        currentPage: response.page,
+        limit: response.limit,
+        total: response.total,
       });
     } catch (error) {
       console.error('Error fetching leads:', error);
@@ -92,15 +92,17 @@ const LeadsPage = () => {
   };
 
   const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'new':
+    switch (status?.toLowerCase()) {
+      case 'start-to-call':
         return 'bg-blue-100 text-blue-800';
-      case 'contacted':
+      case 'call-to-connect':
         return 'bg-yellow-100 text-yellow-800';
-      case 'won':
+      case 'connect-to-contact':
         return 'bg-green-100 text-green-800';
-      case 'lost':
-        return 'bg-red-100 text-red-800';
+      case 'contact-to-demo':
+        return 'bg-purple-100 text-purple-800';
+      case 'demo-to-close':
+        return 'bg-indigo-100 text-indigo-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -208,7 +210,7 @@ const LeadsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {lead.client_id?.name || 'No client'}
+                          {typeof lead.client_id === 'string' ? 'Loading...' : lead.client_id.name || 'No client'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

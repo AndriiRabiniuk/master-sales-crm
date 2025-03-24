@@ -1,12 +1,13 @@
 import { api, API_URL } from './index';
+import { LeadSource, LeadStatus, IClient, IUser } from './types';
 
 export interface Lead {
   _id: string;
-  user_id: string;
-  client_id: any;
+  user_id?: string | IUser;
+  client_id: string | IClient;
   name: string;
-  source: 'website' | 'referral' | 'event';
-  statut: 'new' | 'contacted' | 'won' | 'lost';
+  source: LeadSource;
+  statut: LeadStatus;
   valeur_estimee: number;
   created_at: string;
   createdAt?: string; // For backward compatibility
@@ -79,6 +80,16 @@ const leadService = {
       await api.delete(`${API_URL}/leads/${id}`);
     } catch (error) {
       console.error(`Error deleting lead with id ${id}:`, error);
+      throw error;
+    }
+  },
+
+  assignLead: async (leadId: string, userId: string): Promise<Lead> => {
+    try {
+      const response = await api.put<Lead>(`${API_URL}/leads/${leadId}/assign`, { userId });
+      return response.data;
+    } catch (error) {
+      console.error(`Error assigning lead with id ${leadId}:`, error);
       throw error;
     }
   }

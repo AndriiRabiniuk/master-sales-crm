@@ -204,14 +204,16 @@ export const formatLeadStatus = (status: LeadStatus | any): string => {
   }
   
   switch (status) {
-    case LeadStatus.NEW:
-      return 'New';
-    case LeadStatus.CONTACTED:
-      return 'Contacted';
-    case LeadStatus.WON:
-      return 'Won';
-    case LeadStatus.LOST:
-      return 'Lost';
+    case LeadStatus.START_TO_CALL:
+      return 'Start to Call';
+    case LeadStatus.CALL_TO_CONNECT:
+      return 'Call to Connect';
+    case LeadStatus.CONNECT_TO_CONTACT:
+      return 'Connect to Contact';
+    case LeadStatus.CONTACT_TO_DEMO:
+      return 'Contact to Demo';
+    case LeadStatus.DEMO_TO_CLOSE:
+      return 'Demo to Close';
     default:
       return String(status) || 'Unknown Status';
   }
@@ -225,23 +227,26 @@ export const getLeadStatusBadgeColor = (status: LeadStatus | any): string => {
     if (status._id) {
       const statusName = status.name ? status.name.toLowerCase() : '';
       
-      if (statusName.includes('new')) return 'bg-blue-100 text-blue-800';
-      if (statusName.includes('contacted')) return 'bg-yellow-100 text-yellow-800';
-      if (statusName.includes('won')) return 'bg-green-100 text-green-800';
-      if (statusName.includes('lost')) return 'bg-red-100 text-red-800';
+      if (statusName.includes('start-to-call')) return 'bg-blue-100 text-blue-800';
+      if (statusName.includes('call-to-connect')) return 'bg-yellow-100 text-yellow-800';
+      if (statusName.includes('connect-to-contact')) return 'bg-green-100 text-green-800';
+      if (statusName.includes('contact-to-demo')) return 'bg-purple-100 text-purple-800';
+      if (statusName.includes('demo-to-close')) return 'bg-indigo-100 text-indigo-800';
     }
     return 'bg-gray-100 text-gray-800';
   }
   
   switch (status) {
-    case LeadStatus.NEW:
+    case LeadStatus.START_TO_CALL:
       return 'bg-blue-100 text-blue-800';
-    case LeadStatus.CONTACTED:
+    case LeadStatus.CALL_TO_CONNECT:
       return 'bg-yellow-100 text-yellow-800';
-    case LeadStatus.WON:
+    case LeadStatus.CONNECT_TO_CONTACT:
       return 'bg-green-100 text-green-800';
-    case LeadStatus.LOST:
-      return 'bg-red-100 text-red-800';
+    case LeadStatus.CONTACT_TO_DEMO:
+      return 'bg-purple-100 text-purple-800';
+    case LeadStatus.DEMO_TO_CLOSE:
+      return 'bg-indigo-100 text-indigo-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }

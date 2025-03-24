@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { FiEdit, FiArrowLeft, FiPhone, FiMail, FiFileText, FiCalendar, FiList, FiPlus } from 'react-icons/fi';
+import { FiEdit, FiArrowLeft, FiPhone, FiMail, FiFileText, FiCalendar, FiList, FiPlus, FiUser } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import leadService from '@/services/api/leadService';
+import userService from '@/services/api/userService';
 
 const LeadDetailPage = () => {
   const router = useRouter();
@@ -14,10 +15,16 @@ const LeadDetailPage = () => {
   
   const [lead, setLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>([]);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState('');
 
   useEffect(() => {
     if (leadId) {
-      fetchLeadData();
+      Promise.all([
+        fetchLeadData(),
+        fetchUsers()
+      ]);
     }
   }, [leadId]);
 
@@ -34,6 +41,35 @@ const LeadDetailPage = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const response = await userService.getAll();
+      setUsers(response.users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
+    }
+  };
+
+  const handleAssignLead = async () => {
+    if (!selectedUserId) {
+      toast.error('Please select a user to assign the lead to');
+      return;
+    }
+
+    try {
+      await leadService.update(leadId, {
+        user_id: selectedUserId
+      });
+      toast.success('Lead assigned successfully');
+      setShowAssignModal(false);
+      fetchLeadData();
+    } catch (error) {
+      console.error('Error assigning lead:', error);
+      toast.error('Failed to assign lead');
+    }
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fr-FR');
@@ -41,18 +77,16 @@ const LeadDetailPage = () => {
 
   const getStatusBadgeColor = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'new':
+      case 'start-to-call':
         return 'bg-blue-100 text-blue-800';
-      case 'qualified':
-        return 'bg-green-100 text-green-800';
-      case 'proposition':
+      case 'call-to-connect':
         return 'bg-yellow-100 text-yellow-800';
-      case 'negotiation':
+      case 'connect-to-contact':
+        return 'bg-green-100 text-green-800';
+      case 'contact-to-demo':
         return 'bg-purple-100 text-purple-800';
-      case 'won':
+      case 'demo-to-close':
         return 'bg-indigo-100 text-indigo-800';
-      case 'lost':
-        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -106,19 +140,33 @@ const LeadDetailPage = () => {
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <Link href="/leads" className="flex items-center text-indigo-600 hover:text-indigo-800">
-            <FiArrowLeft className="mr-2" /> Back to Leads
+          <Link
+            href="/leads"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900"
+          >
+            <FiArrowLeft className="mr-2" />
+            Back to Leads
           </Link>
         </div>
 
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">{lead.name}</h1>
-          <Link
-            href={`/leads/${lead._id}/edit`}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded flex items-center"
-          >
-            <FiEdit className="mr-2" /> Edit Lead
-          </Link>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setShowAssignModal(true)}
+              className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <FiUser className="mr-2" />
+              Assign Lead
+            </button>
+            <Link
+              href={`/leads/${lead._id}/edit`}
+              className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <FiEdit className="mr-2" />
+              Edit
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -280,6 +328,47 @@ const LeadDetailPage = () => {
             </div>
           )}
         </div>
+
+        {/* Assign Lead Modal */}
+        {showAssignModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                  Assign Lead
+                </h3>
+                <div className="mt-2">
+                  <select
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Select a user</option>
+                    {users.map((user) => (
+                      <option key={user._id} value={user._id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mt-4 flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowAssignModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAssignLead}
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
+                  >
+                    Assign
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );

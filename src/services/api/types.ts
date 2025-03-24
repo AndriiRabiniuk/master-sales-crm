@@ -14,10 +14,11 @@ export enum LeadSource {
 }
 
 export enum LeadStatus {
-  NEW = 'new',
-  CONTACTED = 'contacted',
-  WON = 'won',
-  LOST = 'lost'
+  START_TO_CALL = 'start-to-call',
+  CALL_TO_CONNECT = 'call-to-connect',
+  CONNECT_TO_CONTACT = 'connect-to-contact',
+  CONTACT_TO_DEMO = 'contact-to-demo',
+  DEMO_TO_CLOSE = 'demo-to-close'
 }
 
 export enum InteractionType {

@@ -7,6 +7,8 @@ import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import leadService, { Lead } from '@/services/api/leadService';
 import clientService from '@/services/api/clientService';
+import { LeadSource, LeadStatus } from '@/services/api/types';
+import userService from '@/services/api/userService';
 
 const EditLeadPage = () => {
   const router = useRouter();
@@ -21,36 +23,41 @@ const EditLeadPage = () => {
   // Form state
   const [name, setName] = useState('');
   const [clientId, setClientId] = useState('');
-  const [source, setSource] = useState<'website' | 'referral' | 'event' | ''>('');
-  const [status, setStatus] = useState<'new' | 'contacted' | 'won' | 'lost'>('new');
+  const [source, setSource] = useState<LeadSource | ''>('');
+  const [status, setStatus] = useState<LeadStatus>(LeadStatus.START_TO_CALL);
   const [estimatedValue, setEstimatedValue] = useState('');
   const [userId, setUserId] = useState('');
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     if (leadId) {
       Promise.all([
         fetchLead(),
-        fetchClients()
+        fetchClients(),
+        fetchUsers()
       ]);
     }
   }, [leadId]);
 
   const fetchLead = async () => {
     try {
+      setLoading(true);
       const leadData = await leadService.getById(leadId);
       setLead(leadData);
       
       // Set form values
       setName(leadData.name || '');
-      setClientId(leadData.client_id || '');
+      setClientId(typeof leadData.client_id === 'string' ? leadData.client_id : leadData.client_id._id);
       setSource(leadData.source || '');
-      setStatus(leadData.statut || 'new');
+      setStatus(leadData.statut || LeadStatus.START_TO_CALL);
       setEstimatedValue(leadData.valeur_estimee ? String(leadData.valeur_estimee) : '');
-      setUserId(leadData.user_id || '');
+      setUserId(typeof leadData.user_id === 'string' ? leadData.user_id : leadData.user_id._id);
     } catch (error) {
       console.error('Error fetching lead:', error);
       toast.error('Failed to load lead details');
       router.push('/leads');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,8 +68,16 @@ const EditLeadPage = () => {
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast.error('Failed to load clients');
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await userService.getAll();
+      setUsers(response.users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
     }
   };
 
@@ -81,7 +96,7 @@ const EditLeadPage = () => {
         name,
         client_id: clientId || undefined,
         user_id: userId,
-        source: source as 'website' | 'referral' | 'event' | undefined,
+        source: source as LeadSource,
         statut: status,
         valeur_estimee: estimatedValue ? parseFloat(estimatedValue) : undefined
       };
@@ -92,6 +107,7 @@ const EditLeadPage = () => {
     } catch (error) {
       console.error('Error updating lead:', error);
       toast.error('Failed to update lead');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -166,7 +182,7 @@ const EditLeadPage = () => {
                 </label>
                 <select
                   id="client"
-                  value={clientId._id}
+                  value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 >
@@ -187,13 +203,13 @@ const EditLeadPage = () => {
                   <select
                     id="source"
                     value={source}
-                    onChange={(e) => setSource(e.target.value as 'website' | 'referral' | 'event' | '')}
+                    onChange={(e) => setSource(e.target.value as LeadSource)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="">Select a source</option>
-                    <option value="website">Website</option>
-                    <option value="referral">Referral</option>
-                    <option value="event">Event</option>
+                    <option value={LeadSource.WEBSITE}>Website</option>
+                    <option value={LeadSource.REFERRAL}>Referral</option>
+                    <option value={LeadSource.EVENT}>Event</option>
                   </select>
                 </div>
 
@@ -204,13 +220,14 @@ const EditLeadPage = () => {
                   <select
                     id="status"
                     value={status}
-                    onChange={(e) => setStatus(e.target.value as 'new' | 'contacted' | 'won' | 'lost')}
+                    onChange={(e) => setStatus(e.target.value as LeadStatus)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   >
-                    <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="won">Won</option>
-                    <option value="lost">Lost</option>
+                    <option value={LeadStatus.START_TO_CALL}>Start to Call</option>
+                    <option value={LeadStatus.CALL_TO_CONNECT}>Call to Connect</option>
+                    <option value={LeadStatus.CONNECT_TO_CONTACT}>Connect to Contact</option>
+                    <option value={LeadStatus.CONTACT_TO_DEMO}>Contact to Demo</option>
+                    <option value={LeadStatus.DEMO_TO_CLOSE}>Demo to Close</option>
                   </select>
                 </div>
 
@@ -228,6 +245,25 @@ const EditLeadPage = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="userId" className="block text-sm font-medium text-gray-700 mb-1">
+                  Assigned User
+                </label>
+                <select
+                  id="userId"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">Select a user</option>
+                  {users.map((user) => (
+                    <option key={user._id} value={user._id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex justify-end space-x-3">
