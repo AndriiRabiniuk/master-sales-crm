@@ -96,6 +96,7 @@ const EditLeadPage = () => {
         name,
         client_id: clientId || undefined,
         user_id: userId,
+        assigned_user_id: userId,
         source: source as LeadSource,
         statut: status,
         valeur_estimee: estimatedValue ? parseFloat(estimatedValue) : undefined

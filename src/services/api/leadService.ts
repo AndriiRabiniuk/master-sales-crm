@@ -1,6 +1,32 @@
 import { api, API_URL } from './index';
 import { LeadSource, LeadStatus, IClient, IUser } from './types';
 
+export interface Task {
+  _id: string;
+  interaction_id: {
+    _id: string;
+    lead_id: string;
+    date_interaction: string;
+    type_interaction: string;
+    description: string;
+    created_at: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  titre: string;
+  description: string;
+  statut: 'completed' | 'in progress' | 'pending';
+  due_date: string;
+  assigned_to: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  created_at: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Lead {
   _id: string;
   user_id?: string | IUser;
@@ -9,9 +35,24 @@ export interface Lead {
   source: LeadSource;
   statut: LeadStatus;
   valeur_estimee: number;
+  description?: string;
   created_at: string;
   createdAt?: string; // For backward compatibility
   updatedAt?: string; // For backward compatibility
+  tasks?: Task[];
+  interactions?: {
+    _id: string;
+    lead_id: {
+      _id: string;
+      name: string;
+    };
+    date_interaction: string;
+    type_interaction: string;
+    description: string;
+    created_at: string;
+    createdAt: string;
+    updatedAt: string;
+  }[];
   
   // Additional fields we might get from the API or need for the UI
   client?: {

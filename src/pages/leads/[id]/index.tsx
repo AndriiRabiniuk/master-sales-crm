@@ -5,7 +5,7 @@ import { FiEdit, FiArrowLeft, FiPhone, FiMail, FiFileText, FiCalendar, FiList, F
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import leadService from '@/services/api/leadService';
+import leadService, { Lead, Task } from '@/services/api/leadService';
 import userService from '@/services/api/userService';
 
 const LeadDetailPage = () => {
@@ -13,7 +13,7 @@ const LeadDetailPage = () => {
   const { id } = router.query;
   const leadId = id as string;
   
-  const [lead, setLead] = useState<any>(null);
+  const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -203,6 +203,26 @@ const LeadDetailPage = () => {
                     </div>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 uppercase mb-2">Assigned User</h3>
+                    {lead.user_id && typeof lead.user_id === 'object' ? (
+                      <Link 
+                        href={`/users/${lead.user_id._id}`}
+                        className="flex items-center hover:bg-gray-50 p-2 rounded-lg transition-colors duration-150"
+                      >
+                        <FiUser className="text-gray-400 mr-2" />
+                        <div>
+                          <p className="text-gray-800 font-medium">{lead.user_id.name}</p>
+                          <p className="text-sm text-gray-500">{lead.user_id.email}</p>
+                        </div>
+                      </Link>
+                    ) : (
+                      <p className="text-gray-800">Not assigned</p>
+                    )}
+                  </div>
+                </div>
                 
                 {lead.description && (
                   <div className="mb-6">
@@ -223,7 +243,7 @@ const LeadDetailPage = () => {
                     <p className="font-medium text-gray-800 mb-2">{typeof lead.client_id === 'object' ? lead.client_id.name : 'Client ID: ' + lead.client_id}</p>
                     {typeof lead.client_id === 'object' && lead.client_id.SIREN && <p className="text-sm text-gray-600 mb-1">SIREN: {lead.client_id.SIREN}</p>}
                     {typeof lead.client_id === 'object' && lead.client_id.SIRET && <p className="text-sm text-gray-600 mb-1">SIRET: {lead.client_id.SIRET}</p>}
-                    {typeof lead.client_id === 'object' && lead.client_id.company_id && (
+                    {typeof lead.client_id === 'object' && lead.client_id.company_id && typeof lead.client_id.company_id === 'object' && (
                       <p className="text-sm text-gray-600 mb-1">Company: {lead.client_id.company_id.name}</p>
                     )}
                     {typeof lead.client_id === 'object' && lead.client_id._id && (
@@ -319,6 +339,83 @@ const LeadDetailPage = () => {
                           >
                             <FiEdit />
                           </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center">
+              <FiList className="mr-2" /> Tasks
+            </h2>
+          </div>
+          
+          {!lead.tasks || lead.tasks.length === 0 ? (
+            <div className="text-center p-8 bg-gray-50 rounded-lg">
+              <p className="text-gray-500 mb-4">No tasks assigned for this lead yet.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Title
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Due Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Assigned To
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {lead.tasks.map((task: Task) => (
+                    <tr key={task._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {task.titre}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {task.description}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            task.statut === 'completed'
+                              ? 'bg-green-100 text-green-800'
+                              : task.statut === 'in progress'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {task.statut.charAt(0).toUpperCase() + task.statut.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {formatDate(task.due_date)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {task.assigned_to.name}
                         </div>
                       </td>
                     </tr>
