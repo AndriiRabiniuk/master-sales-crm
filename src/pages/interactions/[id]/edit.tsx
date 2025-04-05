@@ -30,9 +30,9 @@ const EditInteractionPage = () => {
   const fetchInteraction = async (interactionId: string) => {
     try {
       setLoading(true);
-      console.log("Fetching interaction:", interactionId);
+      console.log("⚙️ Fetching interaction:", interactionId);
       const data = await interactionService.getById(interactionId);
-      console.log("Interaction data received:", data);
+      console.log("⚙️ Interaction data received:", data);
       setInteraction(data);
       setDescription(data.description || '');
       setTypeInteraction(data.type_interaction || 'email');
@@ -45,71 +45,72 @@ const EditInteractionPage = () => {
         setDateInteraction(new Date().toISOString().split('T')[0]);
       }
 
-      // Extract lead's client_id to fetch contacts
-      console.log("Lead data:", data.lead_id);
-      if (data.lead_id && typeof data.lead_id !== 'string') {
-        const leadData = data.lead_id;
-        let clientId = null;
-        
-        // Handle different possible structures of client_id
-        if (leadData.client_id) {
-          if (typeof leadData.client_id === 'string') {
-            clientId = leadData.client_id;
-          } else if (leadData.client_id._id) {
-            clientId = leadData.client_id._id;
-          }
-        }
-        
-        if (clientId) {
-          console.log("Fetching contacts for client:", clientId);
-          fetchContacts(clientId);
-        } else {
-          console.log("No valid client_id found in lead data");
-          setLoading(false);
-        }
-      } else {
-        console.log("No client_id found in lead data");
-        setLoading(false);
-      }
-
-      // Use type assertion to handle the contacts property that might exist in API response
-      const dataWithContacts = data as any;
-      if (dataWithContacts.contacts && Array.isArray(dataWithContacts.contacts)) {
-        console.log("Found contacts in interaction:", dataWithContacts.contacts);
-        const contactIds = dataWithContacts.contacts.map((contact: any) => contact._id);
+      // Extract selected contacts from interaction
+      const interactionData = data as any; // Use type assertion for flexibility
+      if (interactionData.contact_ids && Array.isArray(interactionData.contact_ids)) {
+        console.log("⚙️ Setting selected contacts from contact_ids:", interactionData.contact_ids);
+        setSelectedContacts(interactionData.contact_ids);
+      } else if (interactionData.contacts && Array.isArray(interactionData.contacts)) {
+        console.log("⚙️ Setting selected contacts from contacts array:", interactionData.contacts);
+        const contactIds = interactionData.contacts.map((contact: any) => 
+          typeof contact === 'string' ? contact : contact._id
+        );
         setSelectedContacts(contactIds);
       } else {
-        console.log("No contacts found in interaction data");
+        console.log("⚙️ No contacts found in interaction data");
+        setSelectedContacts([]);
       }
+      
+      // Always fetch contacts directly instead of using client ID
+      fetchContacts();
     } catch (error) {
       console.error('Error fetching interaction:', error);
       toast.error('Failed to load interaction details');
       router.push('/interactions');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const fetchContacts = async (clientId: string) => {
+  const fetchContacts = async () => {
     try {
-      console.log("Fetching contacts API call for client:", clientId);
-      const contactsData = await contactService.getByClientId(clientId);
-      console.log("Contacts received:", contactsData);
+      setLoading(true);
+      console.log("📞 Fetching ALL contacts");
       
-      // Handle both possible response formats
-      const responseData = contactsData as any;
-      if (responseData.contacts && Array.isArray(responseData.contacts)) {
-        setContacts(responseData.contacts);
-      } else if (responseData.data && Array.isArray(responseData.data)) {
-        setContacts(responseData.data);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const endpoint = `${apiUrl}/contacts`;
+      
+      // Get auth token
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
+      // Make direct API request to get all contacts
+      const response = await fetch(endpoint, { headers });
+      const data = await response.json();
+      
+      console.log("📞 Contacts API raw response:", data);
+      
+      // Handle different response formats
+      if (data && Array.isArray(data)) {
+        console.log("📞 Using direct array format with", data.length, "contacts");
+        setContacts(data);
+      } else if (data && data.contacts && Array.isArray(data.contacts)) {
+        console.log("📞 Using contacts[] format with", data.contacts.length, "contacts");
+        setContacts(data.contacts);
+      } else if (data && data.data && Array.isArray(data.data)) {
+        console.log("📞 Using data[] format with", data.data.length, "contacts");
+        setContacts(data.data);
       } else {
-        console.log("Invalid contact data structure received");
+        console.log("📞 No valid contacts format found in response:", data);
         setContacts([]);
       }
     } catch (error) {
       console.error('Error fetching contacts:', error);
       toast.error('Failed to load contacts');
       setContacts([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,6 +159,20 @@ const EditInteractionPage = () => {
       setSubmitting(false);
     }
   };
+
+  // Debug log when contacts or selected contacts change
+  useEffect(() => {
+    console.log("📊 Contacts loaded:", contacts.length);
+    console.log("📊 Selected contacts:", selectedContacts);
+    
+    if (contacts.length > 0 && selectedContacts.length > 0) {
+      // Check if all selected contacts exist in the contacts array
+      selectedContacts.forEach(selectedId => {
+        const found = contacts.some(contact => contact._id === selectedId);
+        console.log(`📊 Selected contact ${selectedId} exists in contacts: ${found}`);
+      });
+    }
+  }, [contacts, selectedContacts]);
 
   return (
     <MainLayout>
