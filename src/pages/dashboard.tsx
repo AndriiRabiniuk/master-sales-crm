@@ -348,7 +348,7 @@ const Dashboard = () => {
       <ClientMap clients={clients} />
 
       {/* Charts */}
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {/* <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="bg-white shadow rounded-lg p-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Leads by Status</h3>
           <div className="h-64">
@@ -362,7 +362,7 @@ const Dashboard = () => {
             <Pie data={taskCompletionData} options={{ maintainAspectRatio: false }} />
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Recent Tasks */}
       <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-md">
