@@ -88,8 +88,9 @@ const EditTaskPage = () => {
       setSubmitting(true);
       
       const updatedTask = {
-        title,
+        titre:title,
         description,
+        assigned_to:userId,
         due_date: dueDate || undefined,
         statut: status,
         priorite: priority,
