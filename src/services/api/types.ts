@@ -7,7 +7,9 @@ export enum UserRole {
 export enum LeadSource {
   WEBSITE = 'website',
   REFERRAL = 'referral',
-  EVENT = 'event'
+  EVENT = 'event',
+  OUTBOUND = 'outbound',
+  INBOUND = 'inbound'
 }
 
 export enum LeadStatus {
@@ -15,7 +17,8 @@ export enum LeadStatus {
   CALL_TO_CONNECT = 'Call-to-Connect',
   CONNECT_TO_CONTACT = 'Connect-to-Contact',
   CONTACT_TO_DEMO = 'Contact-to-Demo',
-  DEMO_TO_CLOSE = 'Demo-to-Close'
+  DEMO_TO_CLOSE = 'Demo-to-Close',
+  LOST = 'Lost'
 }
 
 export enum InteractionType {

@@ -211,6 +211,8 @@ const EditLeadPage = () => {
                     <option value={LeadSource.WEBSITE}>Website</option>
                     <option value={LeadSource.REFERRAL}>Referral</option>
                     <option value={LeadSource.EVENT}>Event</option>
+                    <option value={LeadSource.OUTBOUND}>Outbound</option>
+                    <option value={LeadSource.INBOUND}>Inbound</option>
                   </select>
                 </div>
 
@@ -229,6 +231,7 @@ const EditLeadPage = () => {
                     <option value={LeadStatus.CONNECT_TO_CONTACT}>Connect to Contact</option>
                     <option value={LeadStatus.CONTACT_TO_DEMO}>Contact to Demo</option>
                     <option value={LeadStatus.DEMO_TO_CLOSE}>Demo to Close</option>
+                    <option value={LeadStatus.LOST}>Lost</option>
                   </select>
                 </div>
 

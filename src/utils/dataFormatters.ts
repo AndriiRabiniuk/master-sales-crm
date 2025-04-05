@@ -93,16 +93,10 @@ export const formatUserRole = (role: UserRole | any): string => {
   }
   
   switch (role) {
-    case UserRole.SUPER_ADMIN:
-      return 'Super Admin';
     case UserRole.ADMIN:
       return 'Admin';
-    case UserRole.MANAGER:
-      return 'Manager';
     case UserRole.SALES:
       return 'Sales';
-    case UserRole.SUPPORT:
-      return 'Support';
     default:
       return String(role) || 'Unknown Role';
   }
@@ -117,26 +111,17 @@ export const getUserRoleBadgeColor = (role: UserRole | any): string => {
       const roleName = role.name ? role.name.toLowerCase() : '';
       
       // Match based on name keywords
-      if (roleName.includes('super')) return 'bg-purple-100 text-purple-800';
       if (roleName.includes('admin')) return 'bg-red-100 text-red-800';
-      if (roleName.includes('manager')) return 'bg-blue-100 text-blue-800';
       if (roleName.includes('sales')) return 'bg-green-100 text-green-800';
-      if (roleName.includes('support')) return 'bg-yellow-100 text-yellow-800';
     }
     return 'bg-gray-100 text-gray-800';
   }
   
   switch (role) {
-    case UserRole.SUPER_ADMIN:
-      return 'bg-purple-100 text-purple-800';
     case UserRole.ADMIN:
       return 'bg-red-100 text-red-800';
-    case UserRole.MANAGER:
-      return 'bg-blue-100 text-blue-800';
     case UserRole.SALES:
       return 'bg-green-100 text-green-800';
-    case UserRole.SUPPORT:
-      return 'bg-yellow-100 text-yellow-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
@@ -160,6 +145,10 @@ export const formatLeadSource = (source: LeadSource | any): string => {
       return 'Referral';
     case LeadSource.EVENT:
       return 'Event';
+    case LeadSource.OUTBOUND:
+      return 'Outbound';
+    case LeadSource.INBOUND:
+      return 'Inbound';
     default:
       return String(source) || 'Unknown Source';
   }
@@ -176,6 +165,8 @@ export const getLeadSourceBadgeColor = (source: LeadSource | any): string => {
       if (sourceName.includes('website')) return 'bg-blue-100 text-blue-800';
       if (sourceName.includes('referral')) return 'bg-green-100 text-green-800';
       if (sourceName.includes('event')) return 'bg-purple-100 text-purple-800';
+      if (sourceName.includes('outbound')) return 'bg-orange-100 text-orange-800';
+      if (sourceName.includes('inbound')) return 'bg-teal-100 text-teal-800';
     }
     return 'bg-gray-100 text-gray-800';
   }
@@ -187,6 +178,10 @@ export const getLeadSourceBadgeColor = (source: LeadSource | any): string => {
       return 'bg-green-100 text-green-800';
     case LeadSource.EVENT:
       return 'bg-purple-100 text-purple-800';
+    case LeadSource.OUTBOUND:
+      return 'bg-orange-100 text-orange-800';
+    case LeadSource.INBOUND:
+      return 'bg-teal-100 text-teal-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
@@ -214,6 +209,8 @@ export const formatLeadStatus = (status: LeadStatus | any): string => {
       return 'Contact to Demo';
     case LeadStatus.DEMO_TO_CLOSE:
       return 'Demo to Close';
+    case LeadStatus.LOST:
+      return 'Lost';
     default:
       return String(status) || 'Unknown Status';
   }
@@ -232,6 +229,7 @@ export const getLeadStatusBadgeColor = (status: LeadStatus | any): string => {
       if (statusName.includes('connect-to-contact')) return 'bg-green-100 text-green-800';
       if (statusName.includes('contact-to-demo')) return 'bg-purple-100 text-purple-800';
       if (statusName.includes('demo-to-close')) return 'bg-indigo-100 text-indigo-800';
+      if (statusName.includes('lost')) return 'bg-red-100 text-red-800';
     }
     return 'bg-gray-100 text-gray-800';
   }
@@ -247,6 +245,8 @@ export const getLeadStatusBadgeColor = (status: LeadStatus | any): string => {
       return 'bg-purple-100 text-purple-800';
     case LeadStatus.DEMO_TO_CLOSE:
       return 'bg-indigo-100 text-indigo-800';
+    case LeadStatus.LOST:
+      return 'bg-red-100 text-red-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
