@@ -22,7 +22,12 @@ const InteractionDetailPage = () => {
   const fetchInteraction = async (interactionId: string) => {
     try {
       setLoading(true);
+      console.log("Fetching interaction details:", interactionId);
       const data = await interactionService.getById(interactionId);
+      console.log("Interaction details received:", data);
+      const dataWithContacts = data as any;
+      console.log("Contact data available:", dataWithContacts.contacts ? 
+        `Yes, ${dataWithContacts.contacts.length} contacts` : "No contacts found");
       setInteraction(data);
     } catch (error) {
       console.error('Error fetching interaction:', error);

@@ -50,13 +50,37 @@ const AddInteractionPage = () => {
 
   const fetchContacts = async () => {
     try {
-      // Assuming we have a way to get contacts for a client
-      // If the lead has a client_id, fetch contacts for that client
+      // Fetch the lead data to get client information
       const leadData = await leadService.getById(leadId);
+      console.log("Lead data for contacts:", leadData);
       
+      let clientId = null;
+      // Handle different possible structures of client_id
       if (leadData.client_id) {
-        const contactsData = await contactService.getByClientId(leadData.client_id);
-        setContacts(contactsData.data || []);
+        if (typeof leadData.client_id === 'string') {
+          clientId = leadData.client_id;
+        } else if (leadData.client_id._id) {
+          clientId = leadData.client_id._id;
+        }
+      }
+      
+      if (clientId) {
+        console.log("Fetching contacts for client:", clientId);
+        const contactsData = await contactService.getByClientId(clientId);
+        console.log("Contacts received:", contactsData);
+        
+        // Handle both possible response formats
+        const responseData = contactsData as any;
+        if (responseData.contacts && Array.isArray(responseData.contacts)) {
+          setContacts(responseData.contacts);
+        } else if (responseData.data && Array.isArray(responseData.data)) {
+          setContacts(responseData.data);
+        } else {
+          console.log("Invalid contact data structure received");
+          setContacts([]);
+        }
+      } else {
+        console.log("No valid client_id found in lead data");
       }
     } catch (error) {
       console.error('Error fetching contacts:', error);
@@ -92,7 +116,7 @@ const AddInteractionPage = () => {
         description,
         type_interaction: typeInteraction,
         date_interaction: new Date(dateInteraction).toISOString(),
-        contacts: selectedContacts.length > 0 ? selectedContacts : undefined
+        contact_ids: selectedContacts.length > 0 ? selectedContacts : undefined
       };
 
       await interactionService.create(interactionData);

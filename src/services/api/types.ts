@@ -220,7 +220,7 @@ export interface ICreateInteractionRequest {
   date_interaction?: Date | string;
   type_interaction?: InteractionType;
   description?: string;
-  contacts?: string[]; // Array of contact IDs to associate with this interaction
+  contact_ids?: string[]; // Array of contact IDs to associate with this interaction
 }
 
 export interface ICreateNoteRequest {

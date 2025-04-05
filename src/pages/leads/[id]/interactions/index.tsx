@@ -32,7 +32,7 @@ const LeadInteractionsPage = () => {
       ]);
       
       setLead(leadData);
-      setInteractions(interactionsData.interactions || []);
+      setInteractions(interactionsData.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load lead interactions');
@@ -187,25 +187,25 @@ const LeadInteractionsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getInteractionTypeColor(
-                            interaction.type
+                            interaction.type_interaction
                           )}`}
                         >
-                          {getInteractionTypeLabel(interaction.type)}
+                          {getInteractionTypeLabel(interaction.type_interaction)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           <Link 
-                            href={`/leads/${leadId}/interactions/${interaction._id}`}
+                            href={`/interactions/${interaction._id}`}
                             className="hover:text-indigo-600"
                           >
-                            {interaction.title}
+                            {interaction.description || 'No description'}
                           </Link>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {formatDate(interaction.date || interaction.created_at)}
+                          {formatDate(interaction.date_interaction || interaction.created_at)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -216,7 +216,7 @@ const LeadInteractionsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
                           <Link
-                            href={`/leads/${leadId}/interactions/edit/${interaction._id}`}
+                            href={`/interactions/${interaction._id}/edit`}
                             className="text-green-600 hover:text-green-900"
                             title="Edit interaction"
                           >

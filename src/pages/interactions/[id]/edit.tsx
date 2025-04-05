@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import interactionService from '@/services/api/interactionService';
+import contactService from '@/services/api/contactService';
 import { InteractionType } from '@/services/api/types';
 
 const EditInteractionPage = () => {
@@ -17,6 +18,8 @@ const EditInteractionPage = () => {
   const [description, setDescription] = useState('');
   const [typeInteraction, setTypeInteraction] = useState('');
   const [dateInteraction, setDateInteraction] = useState('');
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -27,7 +30,9 @@ const EditInteractionPage = () => {
   const fetchInteraction = async (interactionId: string) => {
     try {
       setLoading(true);
+      console.log("Fetching interaction:", interactionId);
       const data = await interactionService.getById(interactionId);
+      console.log("Interaction data received:", data);
       setInteraction(data);
       setDescription(data.description || '');
       setTypeInteraction(data.type_interaction || 'email');
@@ -39,6 +44,43 @@ const EditInteractionPage = () => {
       } else {
         setDateInteraction(new Date().toISOString().split('T')[0]);
       }
+
+      // Extract lead's client_id to fetch contacts
+      console.log("Lead data:", data.lead_id);
+      if (data.lead_id && typeof data.lead_id !== 'string') {
+        const leadData = data.lead_id;
+        let clientId = null;
+        
+        // Handle different possible structures of client_id
+        if (leadData.client_id) {
+          if (typeof leadData.client_id === 'string') {
+            clientId = leadData.client_id;
+          } else if (leadData.client_id._id) {
+            clientId = leadData.client_id._id;
+          }
+        }
+        
+        if (clientId) {
+          console.log("Fetching contacts for client:", clientId);
+          fetchContacts(clientId);
+        } else {
+          console.log("No valid client_id found in lead data");
+          setLoading(false);
+        }
+      } else {
+        console.log("No client_id found in lead data");
+        setLoading(false);
+      }
+
+      // Use type assertion to handle the contacts property that might exist in API response
+      const dataWithContacts = data as any;
+      if (dataWithContacts.contacts && Array.isArray(dataWithContacts.contacts)) {
+        console.log("Found contacts in interaction:", dataWithContacts.contacts);
+        const contactIds = dataWithContacts.contacts.map((contact: any) => contact._id);
+        setSelectedContacts(contactIds);
+      } else {
+        console.log("No contacts found in interaction data");
+      }
     } catch (error) {
       console.error('Error fetching interaction:', error);
       toast.error('Failed to load interaction details');
@@ -46,6 +88,39 @@ const EditInteractionPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchContacts = async (clientId: string) => {
+    try {
+      console.log("Fetching contacts API call for client:", clientId);
+      const contactsData = await contactService.getByClientId(clientId);
+      console.log("Contacts received:", contactsData);
+      
+      // Handle both possible response formats
+      const responseData = contactsData as any;
+      if (responseData.contacts && Array.isArray(responseData.contacts)) {
+        setContacts(responseData.contacts);
+      } else if (responseData.data && Array.isArray(responseData.data)) {
+        setContacts(responseData.data);
+      } else {
+        console.log("Invalid contact data structure received");
+        setContacts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      toast.error('Failed to load contacts');
+      setContacts([]);
+    }
+  };
+
+  const handleContactChange = (contactId: string) => {
+    setSelectedContacts(prev => {
+      if (prev.includes(contactId)) {
+        return prev.filter(id => id !== contactId);
+      } else {
+        return [...prev, contactId];
+      }
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,7 +144,8 @@ const EditInteractionPage = () => {
       const updatedInteraction = {
         description,
         type_interaction: typeInteraction as InteractionType,
-        date_interaction: new Date(dateInteraction).toISOString()
+        date_interaction: new Date(dateInteraction).toISOString(),
+        contact_ids: selectedContacts.length > 0 ? selectedContacts : undefined
       };
       
       await interactionService.update(interaction._id, updatedInteraction);
@@ -155,6 +231,34 @@ const EditInteractionPage = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
+
+                {contacts.length > 0 && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Contacts
+                    </label>
+                    <div className="bg-gray-50 p-3 rounded-md max-h-60 overflow-y-auto">
+                      {contacts.map((contact) => (
+                        <div key={contact._id} className="flex items-center mb-2">
+                          <input
+                            type="checkbox"
+                            id={`contact-${contact._id}`}
+                            value={contact._id}
+                            checked={selectedContacts.includes(contact._id)}
+                            onChange={() => handleContactChange(contact._id)}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                          />
+                          <label 
+                            htmlFor={`contact-${contact._id}`} 
+                            className="ml-2 block text-sm text-gray-900"
+                          >
+                            {contact.prenom} {contact.name} - {contact.email}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-end space-x-3">
                   <Link
