@@ -47,7 +47,7 @@ const LeadDetailPage = () => {
   const fetchUsers = async () => {
     try {
       const response = await userService.getAll();
-      setUsers(response.users || []);
+      setUsers(response.data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to load users');
@@ -104,6 +104,8 @@ const LeadDetailPage = () => {
         return 'bg-purple-100 text-purple-800';
       case 'demo-to-close':
         return 'bg-indigo-100 text-indigo-800';
+      case 'lost':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -469,6 +471,91 @@ const LeadDetailPage = () => {
                           >
                             <FiTrash2 />
                           </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center">
+              <FiList className="mr-2" /> Status History
+            </h2>
+          </div>
+          
+          {!lead.statusLogs || lead.statusLogs.length === 0 ? (
+            <div className="text-center p-8 bg-gray-50 rounded-lg">
+              <p className="text-gray-500">No status changes recorded for this lead yet.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Previous Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      New Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Changed By
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Changed At
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Duration
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {lead.statusLogs.map((log) => (
+                    <tr key={log._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
+                            log.previous_status
+                          )}`}
+                        >
+                          {log.previous_status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
+                            log.new_status
+                          )}`}
+                        >
+                          {log.new_status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{log.changed_by.name}</div>
+                        <div className="text-sm text-gray-500">{log.changed_by.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(log.changed_at).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {log.duration === 0 
+                            ? 'Just changed' 
+                            : `${log.duration} ${log.duration === 1 ? 'day' : 'days'}`
+                          }
                         </div>
                       </td>
                     </tr>

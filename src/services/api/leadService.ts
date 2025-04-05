@@ -53,6 +53,21 @@ export interface Lead {
     createdAt: string;
     updatedAt: string;
   }[];
+  statusLogs?: {
+    _id: string;
+    lead_id: string;
+    previous_status: string;
+    new_status: string;
+    changed_by: {
+      _id: string;
+      name: string;
+      email: string;
+    };
+    changed_at: string;
+    duration: number;
+    createdAt: string;
+    updatedAt: string;
+  }[];
   
   // Additional fields we might get from the API or need for the UI
   client?: {
