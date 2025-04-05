@@ -70,12 +70,12 @@ export interface LeadsResponse {
 }
 
 const leadService = {
-  getAll: async (page = 1, limit = 10, search = '', client_id?: string): Promise<LeadsResponse> => {
+  getAll: async (page = 1, limit = 10, search = '', client_id?: string, personal?: boolean): Promise<LeadsResponse> => {
     try {
       console.log('Lead getAll - token before request:', localStorage.getItem('token'));
       
       const response = await api.get<LeadsResponse>(`${API_URL}/leads`, {
-        params: { page, limit, search, client_id }
+        params: { page, limit, search, client_id, personal }
       });
       
       console.log('Lead getAll - response received:', response.status);

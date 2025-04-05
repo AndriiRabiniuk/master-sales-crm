@@ -19,15 +19,16 @@ const TasksPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showPersonalOnly, setShowPersonalOnly] = useState(false);
 
   useEffect(() => {
     fetchTasks(currentPage);
-  }, [currentPage, statusFilter]);
+  }, [currentPage, statusFilter, showPersonalOnly]);
 
   const fetchTasks = async (page: number, search = '') => {
     try {
       setLoading(true);
-      const response = await taskService.getAll(page, itemsPerPage, search);
+      const response = await taskService.getAll(page, itemsPerPage, search, showPersonalOnly);
       
       // Client-side filtering
       let filteredTasks = response.tasks || [];
@@ -193,7 +194,21 @@ const TasksPage = () => {
                 )}
               </form>
               
-        
+              <div className="flex items-center">
+                <label htmlFor="personalTasks" className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="personalTasks"
+                    checked={showPersonalOnly}
+                    onChange={() => {
+                      setShowPersonalOnly(!showPersonalOnly);
+                      setCurrentPage(1);
+                    }}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Show my tasks only</span>
+                </label>
+              </div>
             </div>
             
             <div className="flex justify-end items-center mb-2">
@@ -326,13 +341,14 @@ const TasksPage = () => {
           
           {!loading && tasks.length > 0 && (
             <div className="px-6 py-4 border-t border-gray-200">
-              <Pagination 
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                itemsPerPage={itemsPerPage}
-                onPageChange={handlePageChange}
-              />
+              <div className="mt-4 flex justify-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  onPageChange={handlePageChange}
+                />
+              </div>
             </div>
           )}
         </div>

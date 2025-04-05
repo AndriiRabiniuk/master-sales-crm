@@ -48,10 +48,10 @@ export interface TasksResponse {
 }
 
 const taskService = {
-  getAll: async (page = 1, limit = 10, search = ''): Promise<TasksResponse> => {
+  getAll: async (page = 1, limit = 10, search = '', personal?: boolean): Promise<TasksResponse> => {
     try {
       const response = await api.get<TasksResponse>(`${API_URL}/tasks`, {
-        params: { page, limit, search }
+        params: { page, limit, search, personal }
       });
       return response.data;
     } catch (error) {

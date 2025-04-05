@@ -21,10 +21,11 @@ const LeadsPage = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [showPersonalOnly, setShowPersonalOnly] = useState(false);
 
   useEffect(() => {
     fetchLeads();
-  }, [pagination.currentPage]);
+  }, [pagination.currentPage, showPersonalOnly]);
 
   const fetchLeads = async () => {
     try {
@@ -33,7 +34,8 @@ const LeadsPage = () => {
         pagination.currentPage,
         pagination.limit,
         searchTerm,
-        client_id
+        typeof client_id === 'string' ? client_id : undefined,
+        showPersonalOnly
       );
       
       // Filter by status if needed
@@ -162,6 +164,22 @@ const LeadsPage = () => {
                   </button>
                 </div>
               </form>
+              
+              <div className="flex items-center">
+                <label htmlFor="personalLeads" className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="personalLeads"
+                    checked={showPersonalOnly}
+                    onChange={() => {
+                      setShowPersonalOnly(!showPersonalOnly);
+                      setPagination({...pagination, currentPage: 1});
+                    }}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Show my leads only</span>
+                </label>
+              </div>
             </div>
           </div>
 
