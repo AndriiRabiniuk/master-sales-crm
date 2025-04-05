@@ -6,6 +6,8 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface ClientFormData {
   name: string;
+  description?: string;
+  marketSegment?: string;
   SIREN: string;
   SIRET: string;
   code_postal: string;
@@ -38,6 +40,8 @@ const ClientForm: React.FC<ClientFormProps> = ({
   } = useForm<ClientFormData>({
     defaultValues: initialData || {
       name: '',
+      description: '',
+      marketSegment: '',
       SIREN: '',
       SIRET: '',
       code_postal: '',
@@ -80,6 +84,32 @@ const ClientForm: React.FC<ClientFormProps> = ({
                 {errors.name && (
                   <p className="mt-2 text-sm text-red-600">{errors.name.message}</p>
                 )}
+              </div>
+
+              {/* Description */}
+              <div className="col-span-6">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  rows={3}
+                  {...register('description')}
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+
+              {/* Market Segment */}
+              <div className="col-span-6">
+                <label htmlFor="marketSegment" className="block text-sm font-medium text-gray-700">
+                  Market Segment
+                </label>
+                <input
+                  type="text"
+                  id="marketSegment"
+                  {...register('marketSegment')}
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
               </div>
 
               {/* SIREN */}

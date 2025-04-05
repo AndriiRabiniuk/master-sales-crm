@@ -67,6 +67,8 @@ export interface IClient {
   _id: string;
   company_id: string | ICompany;
   name: string;
+  description?: string;
+  marketSegment?: string;
   SIREN?: string;
   SIRET?: string;
   code_postal?: string;
@@ -190,6 +192,8 @@ export interface ICreateCompanyRequest {
 export interface ICreateClientRequest {
   company_id: string;
   name: string;
+  description?: string;
+  marketSegment?: string;
   SIREN?: string;
   SIRET?: string;
   code_postal?: string;

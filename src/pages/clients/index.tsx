@@ -4,13 +4,14 @@ import { useRouter } from 'next/router';
 import { FiEye, FiEdit, FiTrash2, FiPlus, FiSearch, FiX } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import MainLayout from '@/components/layout/MainLayout';
-import clientService, { Client } from '@/services/api/clientService';
+import clientService from '@/services/api/clientService';
+import { IClient } from '@/services/api/types';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Pagination from '@/components/common/Pagination';
 
 const ClientsPage = () => {
   const router = useRouter();
-  const [clients, setClients] = useState<Client[]>([]);
+  const [clients, setClients] = useState<IClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,8 +28,8 @@ const ClientsPage = () => {
     try {
       setLoading(true);
       const response = await clientService.getAll(page, itemsPerPage, search);
-      setClients(response.clients);
-      setTotalPages(response.totalPages);
+      setClients(response.clients || []);
+      setTotalPages(response.pages);
       setTotalItems(response.total);
       setCurrentPage(response.page);
     } catch (error) {
@@ -96,7 +97,7 @@ const ClientsPage = () => {
               <div className="relative flex-grow">
                 <input
                   type="text"
-                  placeholder="Search clients by name, SIREN, SIRET, or postal code..."
+                  placeholder="Search clients by name, market segment, description, SIREN, SIRET, or postal code..."
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -143,6 +144,9 @@ const ClientsPage = () => {
                         Name
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Market Segment
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         SIREN
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -165,6 +169,9 @@ const ClientsPage = () => {
                         <tr key={client._id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{client.marketSegment || '—'}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-500">{client.SIREN || '—'}</div>
