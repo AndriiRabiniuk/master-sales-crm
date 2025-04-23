@@ -1,1 +1,1 @@
-Initial commit from Create Next App
+Refactor client and lead data handling by renaming 'nom' to 'name' for consistency across components and services.
